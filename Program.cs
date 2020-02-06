@@ -23,7 +23,7 @@ namespace LiveSplit.Racetime
                 Application.SetCompatibleTextRenderingDefault(false);
                 Environment.CurrentDirectory = Path.GetDirectoryName(Application.ExecutablePath);
 
-                Application.Run(new ChannelWindow());
+                Application.Run(new ChannelForm());
               
             }
             finally

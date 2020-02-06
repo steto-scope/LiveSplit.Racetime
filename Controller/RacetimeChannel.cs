@@ -16,6 +16,17 @@ namespace LiveSplit.Racetime.Controller
 {
     public class RacetimeChannel
     {
+        public static async Task RunPeriodically(Action action, TimeSpan period, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(period, cancellationToken);
+
+                if (!cancellationToken.IsCancellationRequested)
+                    action();
+            }
+        }
+
         public const string restProto = "http";
         public const string wsProto = "ws";
         public const string serverDomain = "192.168.178.70";
@@ -23,55 +34,99 @@ namespace LiveSplit.Racetime.Controller
 
         public string FullWebRoot => string.Format("{0}://{1}:{2}/", restProto, serverDomain, serverPort);
         public string FullSocketRoot => string.Format("{0}://{1}:{2}/", wsProto, serverDomain, serverPort);
-        public Uri SocketUri => Race == null ? null : new Uri(FullSocketRoot + "ws/race/" + Race.ID);
 
         public Race Race { get; set; }
+        public UserStatus PersonalStatus
+        {
+            get
+            {
+                var u = Race?.Entrants?.FirstOrDefault(x => x.Name == Authenticator.Identity?.Name);
+                if (u == null)
+                    return UserStatus.Unknown;
+                return u.Status;
+            }
+        }
         protected ITimerModel Model { get; set; }
         private RacetimeAuthenticator Authenticator { get; set; }
         private ClientWebSocket ws;
+        protected List<ChatMessage> log = new List<ChatMessage>();
+        public bool ConnectionError { get; set; }
+        
 
-        CancellationTokenSource cts;
+
+        CancellationTokenSource wscts;
+        CancellationTokenSource rccts;
 
         public RacetimeChannel(LiveSplitState state, ITimerModel model)
         {
+            rccts = new CancellationTokenSource();
+            RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 3), rccts.Token);
+
             Authenticator = new RacetimeAuthenticator();
             this.Model = model;
-
+            
             state.OnSplit += State_OnSplit;
             state.OnUndoSplit += State_OnUndoSplit;
             state.OnReset += State_OnReset;
         }
 
-        public async Task RunAsync()
+        private void Reconnect()
         {
-            cts = new CancellationTokenSource();
+            if(ConnectionError && Race!=null)
+                Connect(Race.ID);
+        }
+
+
+        public async Task RunAsync(string id)
+        {
+            wscts = new CancellationTokenSource();
             ws = new ClientWebSocket();
+
+            //authorize user
+            if (Authenticator.AccessToken != null)
+                goto connect;
+            
             await Authenticator.Authorize();
-           await Authenticator.RequestAccessToken();
+            await Authenticator.RequestAccessToken();
+            
 
             if(Authenticator.AccessToken == null)
             {
                 AuthenticationFailed?.Invoke(this, new EventArgs());
                 return;
             }
+            else
+            {
+                Authenticator.RequestUserInfo();
+                SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
+            }
 
-            
-
+connect:
+            //opening the socket
             ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
-            
-            await ws.ConnectAsync(SocketUri, cts.Token);
-            GoalChanged?.Invoke(this, null);
+            try
+            {
+                await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/race/" + id), wscts.Token);
+            }
+            catch(WebSocketException wex)
+            {
+                //SendSystemMessage(wex.Message);
+                goto cleanup;
+            }
 
-            
             //initial command to sync LiveSplit 
             if (ws.State == WebSocketState.Open)
             {
+                ConnectionError = false;
+                ChannelJoined?.Invoke(this, new EventArgs());
+                SendSystemMessage($"Joined Channel '{id}'");
                 ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"getrace\" }"));
                 ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
             }
-            
 
-            while (ws.State == WebSocketState.Open && !cts.IsCancellationRequested)
+
+
+            while (ws.State == WebSocketState.Open && !wscts.IsCancellationRequested)
             {
 
                 try
@@ -85,109 +140,92 @@ namespace LiveSplit.Racetime.Controller
                     //ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(msg));
                     //await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
                     ArraySegment<byte> bytesReceived = new ArraySegment<byte>(new byte[1024 * 10]);
-                    WebSocketReceiveResult result = await ws.ReceiveAsync(bytesReceived, cts.Token);
+                    WebSocketReceiveResult result = await ws.ReceiveAsync(bytesReceived, wscts.Token);
+                    if (result == null)
+                        continue;
                     string msg = Encoding.UTF8.GetString(bytesReceived.Array, 0, result.Count);
                     RawMessageReceived?.Invoke(this, msg);
 
-                    var chatmessage = ChatMessage.Deserialize((msg), Race?.Entrants);
-                    if(chatmessage != null)
-                        MessageReceived?.Invoke(this, chatmessage);
+                    Console.WriteLine(msg);
+                    
+                    IEnumerable<ChatMessage> chatmessages = ChatMessage.Deserialize(JSON.FromString(msg), Race?.Entrants);
+                   
+                    MessageReceived?.Invoke(this, chatmessages);
+                    ChatMessage racemessage = chatmessages.FirstOrDefault(x => x.Type == MessageType.Race);
+                    
+                    if(racemessage!= null)
+                    {
+                        UpdateRaceData(racemessage);
+                    }
                     
                     
                 }
                 catch(Exception ex)
                 {
-
+                    Console.WriteLine(ex.Message);
                 }
             }
+            
 
-            switch(ws.State)
+            switch (ws.State)
             {
                 case WebSocketState.CloseReceived:
-                    MessageReceived?.Invoke(this, ChatMessage.Deserialize("{ \"type\":\"error\", \"errors\":[\"Server closed the cconnection\"] }", Race?.Entrants));
+                    SendSystemMessage("Server closed the connection");
+                    ConnectionError = false;
+                    Disconnected?.Invoke(this, new EventArgs());
                     break;
+                default:
                 case WebSocketState.Aborted:
-                    MessageReceived?.Invoke(this, ChatMessage.Deserialize("{ \"type\":\"error\", \"errors\":[\"Connection aborted\"] }", Race?.Entrants));
+                    SendSystemMessage("Connection lost");
+                    SendSystemMessage("Reconnecting...");
+                    ConnectionError = true;
+
                     break;
                 case WebSocketState.Closed:
-                    MessageReceived?.Invoke(this, ChatMessage.Deserialize("{ \"type\":\"error\", \"errors\":[\"Connection closed\"] }", Race?.Entrants));
+                    SendSystemMessage("Connection closed");
+                    SendSystemMessage("Reconnecting...");
+                    ConnectionError = true;
+
                     break;
             }
-            
+
+cleanup:
+            ws.Dispose();
+            wscts.Dispose();
+
         }
 
         
-        /*
-        private SRLIRCRights DetermineRights(string flair)
+            
+        private void UpdateRaceData(ChatMessage msg)
         {
-            switch(flair)
+            if (Race == null)
             {
-                case "moderator":
-                case "staff":
-                    return SRLIRCRights.Operator;
-                case ""
-            }
-        }/*
-        *//*
-        private Tuple<string, SRLIRCUser, string> GenerateChatMessage(string msg)
-        {
-            string user;
-            string time;
-            dynamic obj = JSON.FromString(msg);
-
-            switch(obj?.type)
-            {
-                case "chat.message":
-                    user = obj.message?.user?.name?.ToString();
-                    time = DateTime.Parse(obj.message?.posted_at?.ToString()).ToString("HH:mm ");
-                    return new Tuple<string, SRLIRCUser, string>(Race.ID, user==null ? SRLIRCUser.RaceBot : new SRLIRCUser(user), obj.message.message);
-                case "error":
-                    return new Tuple<string, SRLIRCUser, string>(Race.ID, SRLIRCUser.System, obj.errors[0]);
-                case "race.data":
-                    UpdateRaceData(JSON.FromString(msg).race);
-                    
-                    
-                    
-                    break;
+                Race = msg.Race;
+                GoalChanged?.Invoke(this, new EventArgs());
+                UserListRefreshed?.Invoke(this, new EventArgs());
+                return;
             }
 
-            return null;
-        }*/
-
-            /*
-        private void UpdateRaceData(dynamic msg)
-        {
-            Race.Goal = msg.goal?.name ?? "No Goal set";
-            GoalChanged?.Invoke(this, new EventArgs());
+            if(Race.Goal != msg.Race.Goal)
+            {
+                Race.Goal = msg.Race.Goal ?? "No Goal set";
+                GoalChanged?.Invoke(this, new EventArgs());
+            }         
 
             Race.Entrants.Clear();
-            foreach(var e in msg.entrants)
+            foreach(var e in msg.Race.Entrants)
             {
-                Race.Entrants.Add(SRLIRCUser.Deserialize(e));
+                Race.Entrants.Add(e);
             }
             UserListRefreshed?.Invoke(this, new EventArgs());
 
-            switch(msg.status.value)
-            {
-                case "invitational":
-                case "pending":
-                case "open":
-                default:
-                    Race.State = RaceState.NotInRace;
-                    break;
-                case "in_progress":
-                    Race.State = RaceState.RaceStarted;
-                    break;
-                case "finished":
-                case "cancelled":
-                    Race.State = RaceState.RaceEnded;
-                    break;
-            }
+            Race.State = msg.Race.State;
             StateChanged?.Invoke(this, Race.State);
 
         }
 
-        */
+        
 
         private void State_OnReset(object sender, TimerPhase value)
         {
@@ -212,20 +250,20 @@ namespace LiveSplit.Racetime.Controller
         protected event EventHandlerT<string> RawMessageReceived;
         public event EventHandlerT<Model.RaceState> StateChanged;
         public event EventHandler UserListRefreshed;
-        public event EventHandlerT<string> ChatUpdate;
-        protected event EventHandlerT<IEnumerable<ChatMessage>> MessageReceived;
+        public event EventHandlerT<IEnumerable<ChatMessage>> MessageReceived;
 
 
 
 
-        public async void Connect()
+        public async void Connect(string id)
         {
-            await RunAsync();
+            await RunAsync(id.Split('/')[1]);
         }
 
         public void Disconnect()
         {
-            cts.Cancel();
+            wscts.Cancel();
+            rccts.Cancel();
             Console.WriteLine("Disconnect");
         }
         
@@ -238,8 +276,11 @@ namespace LiveSplit.Racetime.Controller
         {
             if (message.StartsWith("."))
             {
-                var command = message.Substring(1, message.IndexOf(' ') - 1).TrimEnd().ToLower();
-                var parameter = message.Substring(message.IndexOf(' ')).TrimStart();
+                int end = 1;
+                end = message.IndexOf(' ') <= 0 ? message.Length - 1 : message.IndexOf(' ') - 1;
+
+                var command = message.Substring(1, end).TrimEnd().ToLower();
+                //var parameter = message.Substring(message.IndexOf(' ')).TrimStart();
                 message = "{ \"action\": \""+command+"\" }";
                 return true;
             }
@@ -254,10 +295,16 @@ namespace LiveSplit.Racetime.Controller
 
             if (ws.State == WebSocketState.Open)
             {               
-                await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, cts.Token);
+                await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, wscts.Token);
             }
         }
-        
 
+        public void SendSystemMessage(string message)
+        {
+            MessageReceived?.Invoke(this, ChatMessage.Deserialize(JSON.FromString("{ \"type\":\"livesplit\", \"message\":\""+message+"\" }"), Race?.Entrants));
+        }
+
+        public void Ready() => SendChannelMessage(".ready");
+        public void Unready() => SendChannelMessage(".unready");
     }
 }

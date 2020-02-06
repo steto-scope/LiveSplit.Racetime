@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LiveSplit.Web;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,17 +15,16 @@ namespace LiveSplit.Racetime.Model
         public string TwitchName { get; set; }
         public UserRole Role { get; set; }
         public UserStatus Status { get; set; }
-
-        public bool IsReady { get; set; }
+        
         public int FinishTime { get; set; }
         public int Place { get; set; }
         public string PlaceOrdinal { get; set; }
         public string Comment { get; set; }
-        public StreamState StreamState { get; set; }
+        public bool IsLive { get; set; }
 
-        public static RacetimeUser RaceBot = Create(null, "RaceBot", UserRole.Bot);
-        public static RacetimeUser LiveSplit = Create(null, "LiveSplit", UserRole.System);
-        public static RacetimeUser Anonymous = Create(null, "Anonymous", UserRole.Anonymous);
+        public static RacetimeUser RaceBot = Create("RaceBot", "RaceBot", UserRole.Bot);
+        public static RacetimeUser LiveSplit = Create("LiveSplit", "LiveSplit", UserRole.System);
+        public static RacetimeUser Anonymous = Create("Anonymous", "Anonymous", UserRole.Anonymous);
 
         private RacetimeUser(string id, string name)
         {
@@ -44,27 +44,47 @@ namespace LiveSplit.Racetime.Model
             if (e?.user == null)
                 return null;
 
-            RacetimeUser user = DeserializeUser(e);
-            if (user != null)
+            RacetimeUser user = null;
+
+            try
             {
-                user.IsReady = e.status.value != "not_ready";
+                user = DeserializeUser(e);
+            }
+            catch
+            {
+                return user;
+            }
+
+            try
+            {
+                
                 user.FinishTime = e.finish_time;
                 user.Place = e.place;
                 user.PlaceOrdinal = e.place_ordinal;
                 user.Comment = e.comment;
-                user.StreamState = e.stream_override ? StreamState.Override : (e.stream_live ? StreamState.Live : StreamState.NotLive);
+                user.IsLive = e.stream_live;
                 return user;
             }
-            return null;
-        }
+            catch { }
 
+            return user;
+        }
+          
         public static RacetimeUser DeserializeUser(dynamic u)
         {
             if (u?.user == null)
                 return null;
+            RacetimeUser user = null;
+            try
+            {
+                 user = RacetimeUser.Create(u.user.id, u.user.name);
+            }
+            catch
+            {
+                return user;
+            }
 
-            RacetimeUser user = RacetimeUser.Create(u.user.id, u.user.name);
-            if(user != null)
+            try
             {
                 user.TwitchChannel = u.user.twitch_channel;
                 user.TwitchName = u.user.twitch_name;
@@ -81,17 +101,17 @@ namespace LiveSplit.Racetime.Model
                     }
                 }
 
+           
                 switch (u.status?.value)
                 {
                     case "not_ready": user.Status = UserStatus.NotReady; break;
                     case "ready": user.Status = UserStatus.Ready; break;
                     default: user.Status = UserStatus.Unknown; break;
                 }
-
-                return user;
             }
+            catch { }
 
-            return null;
+            return user;
         }
     }
 }

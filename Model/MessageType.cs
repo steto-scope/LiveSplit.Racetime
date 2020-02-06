@@ -11,6 +11,7 @@ namespace LiveSplit.Racetime.Model
         Unknown,
         User,
         Error,
-        Race
+        Race,
+        System
     }
 }

@@ -1,4 +1,5 @@
 ﻿using LiveSplit.Racetime.Model;
+using LiveSplit.Web;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -323,7 +324,8 @@ namespace LiveSplit.Racetime.Controller
                 using (var response = request.GetResponse())
                 {
                     var userdata = JSON.FromResponse(response);
-                    Identity = RacetimeUser.Deserialize(userdata);
+                    Identity = RacetimeUser.DeserializeUser(JSON.FromString("{ \"user\": "+userdata+" } "));
+                    Console.WriteLine(Identity.Name);
                     return Identity;
                 }
             }

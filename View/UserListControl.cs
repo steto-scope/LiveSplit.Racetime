@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using LiveSplit.Racetime.Model;
 
 namespace LiveSplit.Racetime.View
 {
@@ -15,63 +16,21 @@ namespace LiveSplit.Racetime.View
         public UserListControl()
         {
             InitializeComponent();
-            /*SetStyle(ControlStyles.SupportsTransparentBackColor, true);
-            BackColor = Color.Transparent;*/
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
-            userPanel.Controls.Add(new RacerControl());
+        }
+
+        public void AddUser(RacetimeUser u)
+        {
+            if (u != null)
+            {
+                RacerControl rc = new RacerControl();
+                rc.UpdateUser(u);
+                userPanel.Controls.Add(rc);
+            }
+        }
+
+        public void Clear()
+        {
+            userPanel.Controls.Clear();
         }
 
     }

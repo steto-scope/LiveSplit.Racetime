@@ -69,8 +69,8 @@ namespace LiveSplit.Racetime
         protected IEnumerable<Race> GetRaces()
         {
             var races = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + racesEndpoint)).races;
-            
-            foreach(var r in races)
+        
+            foreach (var r in races)
             {
                 yield return Race.Deserialize(r);
             }
