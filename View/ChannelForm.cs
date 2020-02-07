@@ -44,11 +44,23 @@ namespace LiveSplit.Racetime.View
             Channel.GoalChanged += Channel_GoalChanged;
             Channel.MessageReceived += Channel_ChatUpdate;
             Channel.Disconnected += Channel_Disconnected;
+            Channel.RawMessageReceived += Channel_RawMessageReceived;
+            Channel.RequestOutputReset += Channel_RequestOutputReset;
 
             InitializeComponent();
             TopMost = alwaysOnTop;
             Show();
             Channel.Connect(channelId);
+        }
+
+        private void Channel_RequestOutputReset(object sender, EventArgs e)
+        {
+            chatBox.Clear();
+        }
+
+        private void Channel_RawMessageReceived(object sender, string value)
+        {
+            Console.WriteLine(value);
         }
 
         private  async void Channel_Disconnected(object sender, EventArgs e)
@@ -60,6 +72,8 @@ namespace LiveSplit.Racetime.View
         {
             if (formClosing)
                 return;
+
+            
 
             foreach(ChatMessage m in chatMessages)
             {
@@ -76,7 +90,7 @@ namespace LiveSplit.Racetime.View
                     col = Color.White;
                 else
                 {
-                    col = ColorList[Math.Abs(m.User.GetHashCode()) % ColorList.Length];
+                    col = ColorList[Math.Abs(m.User.Class) % ColorList.Length];
                 }
                 if (m.IsSystem)
                     col = Color.Red;
@@ -238,6 +252,13 @@ namespace LiveSplit.Racetime.View
         private void readyCheckBox_Click(object sender, EventArgs e)
         {
             readyCheckBox.Enabled = false;
+        }
+
+        private void saveLogButton_Click(object sender, EventArgs e)
+        {
+            string s = inputBox.Text;
+            Channel.TryCreateCommand(ref s);
+            Channel.SendChannelMessage(s);
         }
     }       
 }

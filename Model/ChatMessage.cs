@@ -79,29 +79,7 @@ namespace LiveSplit.Racetime.Model
             }
         }
         
-        public static IEnumerable<ChatMessage> Parse(dynamic m)
-        {
-            Console.WriteLine(m.GetType().ToString() + m.ToString());
-            switch (m.type)
-            {
-                case "error":
-                    yield return RTModelBase.Create<ErrorMessage>(m);
-                    break;
-                case "race.data":
-                    yield return RTModelBase.Create<RaceMessage>(m.race);
-                    break;
-                case "chat.message":
-                    if(m.message.is_system)
-                        yield return RTModelBase.Create<RaceBotMessage>(m.message);
-                    else
-                        yield return RTModelBase.Create<UserMessage>(m.message);
-                    break;
-                case "livesplit":
-                    yield return RTModelBase.Create<LiveSplitMessage>(m.message);
-                    break;
-            }
-            yield break;
-        }
+        
 
     }
 

@@ -9,11 +9,14 @@ namespace LiveSplit.Racetime.Model
 {
     public class RacetimeUser : RTModelBase
     {
-        public string Id
+        private int nameChcecksum = -1;
+        public int Class
         {
             get
             {
-                return Data.id ?? "";
+                if (nameChcecksum == -1)
+                    nameChcecksum = Name.Sum(x => (int)x);
+                return nameChcecksum;
             }
         }
         public string Name

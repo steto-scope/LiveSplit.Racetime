@@ -19,7 +19,7 @@ namespace LiveSplit.Racetime.Controller
         private const string clientID = "Rt8ey6rjcQblDxxuERCxZOfJ9p59ANnFWF92HueU";
         private const string clientSecret = "JYVuPmXmylFc3J8vNN3W8egUmeJ9bRPQGCTvZqEjc24KMaCpihhRA0cK7GNZCOxADkJyYo3mjxvuVcaj4OKUv8dZDUmMqa91kuQWf8eV9YwEmalsedMbZZcfAgAW6rAT";
         public const string authServer = "http://192.168.178.70:8000/";
-        private const string successTargetUri = "http://racetime.gg/";
+        private const string successTargetUri = "http://192.168.178.70:8000/o/done";
         private const string authorizationEndpoint = "o/authorize";
         private const string tokenEndpoint = "o/token";
         private const string userInfoEndpoint = "o/userinfo";

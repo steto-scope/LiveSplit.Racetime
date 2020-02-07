@@ -125,6 +125,8 @@ connect:
                 SendSystemMessage($"Joined Channel '{id}'");
                 ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"getrace\" }"));
                 ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
+                bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
+                ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
             }
 
 
@@ -150,7 +152,7 @@ connect:
                     RawMessageReceived?.Invoke(this, msg);
 
                     
-                    IEnumerable<ChatMessage> chatmessages = ChatMessage.Parse(JSON.FromString(msg));
+                    IEnumerable<ChatMessage> chatmessages = Parse(JSON.FromString(msg));
                    
                     
                     ChatMessage racemessage = chatmessages.FirstOrDefault(x => x.Type == MessageType.Race);                    
@@ -212,7 +214,7 @@ connect:
                 GoalChanged?.Invoke(this, new EventArgs());
             }         
            
-            UserListRefreshed?.Invoke(this, new EventArgs());
+           
 
             switch(msg.Race.State)
             {
@@ -240,13 +242,49 @@ connect:
                     break;
             }
 
-            StateChanged?.Invoke(this, Race.State);
-
             Race = msg.Race;
+            StateChanged?.Invoke(this, Race.State);
+            UserListRefreshed?.Invoke(this, new EventArgs());
+
 
         }
 
-        
+        public IEnumerable<ChatMessage> Parse(dynamic m)
+        {
+            Console.WriteLine(m.GetType().ToString() + m.ToString());
+            switch (m.type)
+            {
+                case "error":
+                    yield return RTModelBase.Create<ErrorMessage>(m);
+                    break;
+                case "race.data":
+                    yield return RTModelBase.Create<RaceMessage>(m.race);
+                    break;
+                case "chat.message":
+                    if (m.message.is_system)
+                        yield return RTModelBase.Create<RaceBotMessage>(m.message);
+                    else
+                        yield return RTModelBase.Create<UserMessage>(m.message);
+                    break;
+                case "chat.history":
+                    RequestOutputReset?.Invoke(this, new EventArgs());
+                    foreach (var msg in m.messages)
+                    {
+                        //Console.WriteLine(msg);
+                        if (msg.user == null)
+                            yield return RTModelBase.Create<RaceBotMessage>(msg);
+                        else
+                            yield return RTModelBase.Create<UserMessage>(msg);
+                    }
+                    break;
+                case "livesplit":
+                    yield return RTModelBase.Create<LiveSplitMessage>(m.message);
+                    break;
+            }
+            yield break;
+        }
+
+
 
         private void State_OnReset(object sender, TimerPhase value)
         {
@@ -268,10 +306,11 @@ connect:
         public event EventHandler GoalChanged;
         public event EventHandler Kicked;
         public event EventHandler AuthenticationFailed;
-        protected event EventHandlerT<string> RawMessageReceived;
+        public event EventHandlerT<string> RawMessageReceived;
         public event EventHandlerT<Model.RaceState> StateChanged;
         public event EventHandler UserListRefreshed;
         public event EventHandlerT<IEnumerable<ChatMessage>> MessageReceived;
+        public event EventHandler RequestOutputReset;
 
 
 
