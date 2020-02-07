@@ -50,6 +50,7 @@ namespace LiveSplit.Racetime.View
             InitializeComponent();
             TopMost = alwaysOnTop;
             Show();
+            Text = channelId.Substring(channelId.IndexOf('/')+1);
             Channel.Connect(channelId);
         }
 

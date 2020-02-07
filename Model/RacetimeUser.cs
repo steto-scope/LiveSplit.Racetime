@@ -19,6 +19,10 @@ namespace LiveSplit.Racetime.Model
                 return nameChcecksum;
             }
         }
+        public override bool Equals(object obj)
+        {
+            return Name.ToLower() == ((RacetimeUser)obj)?.Name?.ToLower();
+        }
         public string Name
         {
             get

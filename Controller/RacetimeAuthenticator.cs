@@ -333,13 +333,17 @@ namespace LiveSplit.Racetime.Controller
                 using (var response = request.GetResponse())
                 {
                     var userdata = JSON.FromResponse(response);
-                    Identity = RTModelBase.Create<RacetimeUser>(JSON.FromString("{ \"user\": "+userdata+" } "));
+                    Console.WriteLine(userdata);
+                    Identity = RTModelBase.Create<RacetimeUser>(userdata);
                     Console.WriteLine(Identity.Name);
+                    Console.WriteLine(userdata);
                     return Identity;
                 }
             }
             catch(Exception ex)
             {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.InnerException.Message);
                 return null;
             }
         }

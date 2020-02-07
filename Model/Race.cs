@@ -9,6 +9,21 @@ namespace LiveSplit.Racetime.Model
 {
     public class Race : RTModelBase
     {
+        public static dynamic EntrantToUserConverter(dynamic e)
+        {
+            
+            return new
+            {
+               id = e.user.id,
+                name = e.user.name,
+                full_name = e.user.full_name,
+                flair = e.user.flair,
+                twitch_name = e.user.twitch_name,
+                twitch_channel = e.user.twitch_channel,
+                discriminator = e.user.discriminator,
+                status = e.status
+            };
+        }
         public bool AllowNonEntrantChat
         {
             get
@@ -106,7 +121,7 @@ namespace LiveSplit.Racetime.Model
             {
                 foreach(var e in Data.entrants)
                 {
-                    yield return RTModelBase.Create<RacetimeUser>(e);
+                    yield return RTModelBase.Create<RacetimeUser>(EntrantToUserConverter(e));
                 }
             }
         }

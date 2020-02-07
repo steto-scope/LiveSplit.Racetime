@@ -40,7 +40,9 @@ namespace LiveSplit.Racetime.Controller
         {
             get
             {
-                var u = Race?.Entrants?.FirstOrDefault(x => x.Name == Authenticator.Identity?.Name);
+                //Console.WriteLine(Race.Entrants.First().Name);
+                //Console.WriteLine(Authenticator.Identity?.Name.ToLower());
+                var u = Race?.Entrants?.FirstOrDefault(x => x.Name.ToLower() == Authenticator.Identity?.Name.ToLower());
                 if (u == null)
                     return UserStatus.Unknown;
                 return u.Status;
@@ -76,6 +78,29 @@ namespace LiveSplit.Racetime.Controller
                 Connect(Race.ID);
         }
 
+        private async Task<bool> ReceiveAndProcess()
+        {
+            ArraySegment<byte> bytesReceived = new ArraySegment<byte>(new byte[1024 * 10]);
+            WebSocketReceiveResult result = await ws.ReceiveAsync(bytesReceived, wscts.Token);
+            if (result == null)
+                return false;
+
+            var msg = Encoding.UTF8.GetString(bytesReceived.Array, 0, result.Count);
+            RawMessageReceived?.Invoke(this, msg);
+
+
+            IEnumerable<ChatMessage> chatmessages = Parse(JSON.FromString(msg));
+
+
+            ChatMessage racemessage = chatmessages.FirstOrDefault(x => x.Type == MessageType.Race);
+            if (racemessage != null)
+            {
+                UpdateRaceData((RaceMessage)racemessage);
+            }
+            MessageReceived?.Invoke(this, chatmessages);
+            return true;
+        }
+
 
         public async Task RunAsync(string id)
         {
@@ -88,8 +113,9 @@ namespace LiveSplit.Racetime.Controller
             
             await Authenticator.Authorize();
             await Authenticator.RequestAccessToken();
-            
 
+            Console.WriteLine(Authenticator.AccessToken);
+            Console.WriteLine(Authenticator.Identity);
             if(Authenticator.AccessToken == null)
             {
                 AuthenticationFailed?.Invoke(this, new EventArgs());
@@ -125,11 +151,13 @@ connect:
                 SendSystemMessage($"Joined Channel '{id}'");
                 ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"getrace\" }"));
                 ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
-                bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
-                ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
+                await ReceiveAndProcess();
+                ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
+                ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
+                await ReceiveAndProcess();
             }
 
-
+            Console.WriteLine(new Uri(FullSocketRoot + "ws/o/race/" + id).AbsoluteUri);
 
             while (ws.State == WebSocketState.Open && !wscts.IsCancellationRequested)
             {
@@ -144,28 +172,12 @@ connect:
                     }*/
                     //ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(msg));
                     //await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
-                    ArraySegment<byte> bytesReceived = new ArraySegment<byte>(new byte[1024 * 10]);
-                    WebSocketReceiveResult result = await ws.ReceiveAsync(bytesReceived, wscts.Token);
-                    if (result == null)
-                        continue;
-                    string msg = Encoding.UTF8.GetString(bytesReceived.Array, 0, result.Count);
-                    RawMessageReceived?.Invoke(this, msg);
-
-                    
-                    IEnumerable<ChatMessage> chatmessages = Parse(JSON.FromString(msg));
-                   
-                    
-                    ChatMessage racemessage = chatmessages.FirstOrDefault(x => x.Type == MessageType.Race);                    
-                    if(racemessage!= null)
-                    {
-                        UpdateRaceData((RaceMessage)racemessage);
-                    }
-                    MessageReceived?.Invoke(this, chatmessages);
+                    await ReceiveAndProcess();
 
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    //Console.WriteLine(ex.InnerException.Message);
                 }
             }
             
