@@ -20,10 +20,11 @@ namespace LiveSplit.Racetime.Controller
         private const string clientSecret = "JYVuPmXmylFc3J8vNN3W8egUmeJ9bRPQGCTvZqEjc24KMaCpihhRA0cK7GNZCOxADkJyYo3mjxvuVcaj4OKUv8dZDUmMqa91kuQWf8eV9YwEmalsedMbZZcfAgAW6rAT";
         public const string authServer = "http://192.168.178.70:8000/";
         private const string successTargetUri = "http://racetime.gg/";
-        private const string authorizationEndpoint = "o/authorize/";
-        private const string tokenEndpoint = "o/token/";
+        private const string authorizationEndpoint = "o/authorize";
+        private const string tokenEndpoint = "o/token";
         private const string userInfoEndpoint = "o/userinfo";
         private const string revokeEndpoint = "o/revoke_token/";
+        private readonly string[] scopes =/* new string[] { "read", "write" };*/{ "read", "chat_message", "race_action"};
         private readonly IPAddress redirectAddress = IPAddress.Loopback;
         private int redirectPort = 6969;
         private const string challengeMethod = "S256";
@@ -165,14 +166,15 @@ namespace LiveSplit.Racetime.Controller
             localEndpoint = new TcpListener(redirectAddress, redirectPort);
             localEndpoint.Start();
 
-            string authorizationRequest = string.Format("{6}{0}?response_type=code&scope=write%20read&redirect_uri={1}&client_id={2}&state={3}&code_challenge={4}&code_challenge_method={5}",
+            string authorizationRequest = string.Format("{6}{0}?response_type=code&scope={7}&redirect_uri={1}&client_id={2}&state={3}&code_challenge={4}&code_challenge_method={5}",
                 authorizationEndpoint,
                 RedirectUri,
                 clientID,
                 state,
                 code_challenge,
                 challengeMethod,
-                authServer);
+                authServer,
+                string.Join("%20", scopes));
 
             System.Diagnostics.Process.Start(authorizationRequest);
 
@@ -255,6 +257,7 @@ namespace LiveSplit.Racetime.Controller
                             try
                             {
                                 var r = JSON.FromString(responseText);
+                                Console.WriteLine(responseText);
                                 return new Tuple<int, dynamic>(400, r);
                             }
                             catch
@@ -275,12 +278,13 @@ namespace LiveSplit.Racetime.Controller
             string tokenRequestBody = null;
             if (refreshToken == null)
             {
-                tokenRequestBody = string.Format("code={0}&redirect_uri={1}&client_id={2}&code_verifier={3}&client_secret={4}&scope=&grant_type=authorization_code",
+                tokenRequestBody = string.Format("code={0}&redirect_uri={1}&client_id={2}&code_verifier={3}&client_secret={4}&scope={5}&grant_type=authorization_code",
                     Code,
                     RedirectUri,
                     clientID,
                     CodeVerifier,
-                    clientSecret
+                    clientSecret,
+                    string.Join("%20",scopes)
                     );
             }
             else

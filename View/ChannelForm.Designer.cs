@@ -32,6 +32,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.chatBox = new System.Windows.Forms.RichTextBox();
+            this.userlist = new LiveSplit.Racetime.View.UserListControl();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
@@ -44,7 +45,6 @@
             this.actionButton = new DarkUI.Controls.DarkButton();
             this.hideFinishesToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.hideMidraceChatToolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.userlist = new LiveSplit.Racetime.View.UserListControl();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -117,6 +117,17 @@
             this.chatBox.Size = new System.Drawing.Size(500, 400);
             this.chatBox.TabIndex = 0;
             this.chatBox.Text = "";
+            // 
+            // userlist
+            // 
+            this.userlist.BackColor = System.Drawing.Color.Transparent;
+            this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.userlist.Location = new System.Drawing.Point(0, 0);
+            this.userlist.Margin = new System.Windows.Forms.Padding(0);
+            this.userlist.MinimumSize = new System.Drawing.Size(100, 100);
+            this.userlist.Name = "userlist";
+            this.userlist.Size = new System.Drawing.Size(180, 400);
+            this.userlist.TabIndex = 0;
             // 
             // splitContainer3
             // 
@@ -193,7 +204,7 @@
             // 
             this.saveLogButton.Location = new System.Drawing.Point(221, 3);
             this.saveLogButton.Name = "saveLogButton";
-            this.saveLogButton.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.saveLogButton.Padding = new System.Windows.Forms.Padding(5);
             this.saveLogButton.Size = new System.Drawing.Size(70, 23);
             this.saveLogButton.TabIndex = 2;
             this.saveLogButton.Text = "Save Log";
@@ -240,7 +251,7 @@
             this.actionButton.Enabled = false;
             this.actionButton.Location = new System.Drawing.Point(66, 3);
             this.actionButton.Name = "actionButton";
-            this.actionButton.Padding = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.actionButton.Padding = new System.Windows.Forms.Padding(5);
             this.actionButton.Size = new System.Drawing.Size(94, 23);
             this.actionButton.TabIndex = 1;
             this.actionButton.Text = "Connect";
@@ -257,17 +268,6 @@
             this.hideMidraceChatToolTip.AutoPopDelay = 15000;
             this.hideMidraceChatToolTip.InitialDelay = 300;
             this.hideMidraceChatToolTip.ReshowDelay = 100;
-            // 
-            // userlist
-            // 
-            this.userlist.BackColor = System.Drawing.Color.Transparent;
-            this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.userlist.Location = new System.Drawing.Point(0, 0);
-            this.userlist.Margin = new System.Windows.Forms.Padding(0);
-            this.userlist.MinimumSize = new System.Drawing.Size(100, 100);
-            this.userlist.Name = "userlist";
-            this.userlist.Size = new System.Drawing.Size(180, 400);
-            this.userlist.TabIndex = 0;
             // 
             // ChannelForm
             // 

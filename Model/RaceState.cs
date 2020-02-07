@@ -14,6 +14,7 @@ namespace LiveSplit.Racetime.Model
         Ready,
         Starting,
         Started,
-        Ended
+        Ended,
+        Cancelled
     }
 }

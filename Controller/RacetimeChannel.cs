@@ -106,12 +106,14 @@ connect:
             ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
             try
             {
-                await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/race/" + id), wscts.Token);
+                await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/o/race/" + id), wscts.Token);
             }
             catch(WebSocketException wex)
             {
+                Console.WriteLine(wex.Message);
+                Console.WriteLine(wex.InnerException.Message);
+                Console.WriteLine(wex.StackTrace);
                 //SendSystemMessage(wex.Message);
-                goto cleanup;
             }
 
             //initial command to sync LiveSplit 
@@ -170,7 +172,7 @@ connect:
             switch (ws.State)
             {
                 case WebSocketState.CloseReceived:
-                    SendSystemMessage("Server closed the connection");
+                    SendSystemMessage("Disconnect");
                     ConnectionError = false;
                     Disconnected?.Invoke(this, new EventArgs());
                     break;
@@ -189,9 +191,6 @@ connect:
                     break;
             }
 
-cleanup:
-            ws.Dispose();
-            wscts.Dispose();
 
         }
 
@@ -206,6 +205,7 @@ cleanup:
                 UserListRefreshed?.Invoke(this, new EventArgs());
                 return;
             }
+         
 
             if(Race.Goal != msg.Race.Goal)
             {
@@ -219,6 +219,32 @@ cleanup:
                 Race.Entrants.Add(e);
             }
             UserListRefreshed?.Invoke(this, new EventArgs());
+
+            switch(msg.Race.State)
+            {
+                case Racetime.Model.RaceState.Starting:
+                    Model.CurrentState.SetGameTime(TimeSpan.Zero);
+                    Model.CurrentState.Run.Offset = msg.Race.StartDelay;
+                    Model.Start();
+                    break;
+                case Racetime.Model.RaceState.Started:
+                    Model.CurrentState.SetGameTime(DateTime.Now - msg.Race.StartedAt);
+                    Model.Start();
+                    break;
+                case Racetime.Model.RaceState.Cancelled:
+                    Model.Reset();
+                    break;
+            }
+            switch(PersonalStatus)
+            {
+                case UserStatus.Disqualified:
+                    Model.Reset();
+                    break;
+                case UserStatus.Finished:
+                case UserStatus.Forfeit:
+                    Model.Split();
+                    break;
+            }
 
             Race.State = msg.Race.State;
             StateChanged?.Invoke(this, Race.State);
@@ -262,8 +288,10 @@ cleanup:
 
         public void Disconnect()
         {
+           
             wscts.Cancel();
             rccts.Cancel();
+            ws.Dispose();
             Console.WriteLine("Disconnect");
         }
         

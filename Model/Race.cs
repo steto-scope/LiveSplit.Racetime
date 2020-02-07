@@ -19,6 +19,7 @@ namespace LiveSplit.Racetime.Model
         public string Goal { get; set; }
         public string Info { get; set; }
         public string Image { get; set; }
+        public TimeSpan StartDelay { get; set; }
         public int NumEntrants { get; set; }
         public List<RacetimeUser> Entrants { get; set; }
         public string GameSlug { get; set; }
@@ -96,6 +97,8 @@ namespace LiveSplit.Racetime.Model
                 race.Info = r.info;
                 race.NumEntrants = r.entrants_count;
                 race.OpenedAt = DateTime.Parse(r.opened_at);
+                if(r.start_delay != null)
+                    race.StartDelay = TimeSpan.Parse(r.start_delay);
                 race.OpenedBy = RacetimeUser.DeserializeUser(r.opened_by);
 
                 switch (r.status.value)
