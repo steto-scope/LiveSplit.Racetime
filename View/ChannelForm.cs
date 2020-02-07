@@ -63,6 +63,7 @@ namespace LiveSplit.Racetime.View
 
             foreach(ChatMessage m in chatMessages)
             {
+                Console.WriteLine(m);
                 if (m.Type == MessageType.Race)
                     continue;
 
@@ -71,7 +72,7 @@ namespace LiveSplit.Racetime.View
                 chatBox.AppendText("  ");
 
                 Color col;
-                if (m.User == null || m.User == RacetimeUser.RaceBot.Name)
+                if (m.User == null || m.User == RacetimeUser.RaceBot)
                     col = Color.White;
                 else
                 {
@@ -79,8 +80,9 @@ namespace LiveSplit.Racetime.View
                 }
                 if (m.IsSystem)
                     col = Color.Red;
-                if(m.User!=null)
-                    chatBox.AppendText(m.User, col, true);
+
+                if(m.User!=null && m.User != RacetimeUser.LiveSplit)
+                    chatBox.AppendText(m.User.Name, col, true);
                 chatBox.AppendText("  ");
                 chatBox.AppendText(m.Message);
                 chatBox.SelectionStart = chatBox.Text.Length;

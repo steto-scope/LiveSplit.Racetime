@@ -7,74 +7,186 @@ using System.Threading.Tasks;
 
 namespace LiveSplit.Racetime.Model
 {
-    public class ChatMessage
+    public abstract class ChatMessage : RTModelBase
     {
-        public MessageType Type;
-        public Race Race { get; set; }
-        public string Message { get; set; }
-        public string User { get; set; }
-        public DateTime Posted { get; set; }
-        public bool Highlight { get; set; }
-        public bool IsSystem { get; set; }
+        public abstract MessageType Type { get; }
 
-        protected ChatMessage(MessageType type)
+        public virtual string Message
         {
-            Type = type;
+            get
+            {
+                return Data.message;
+            }
         }
-
-        public static ChatMessage CreateUser(string msg, string user, bool isSystem, bool isHighlight, DateTime? posted)
+        public virtual RacetimeUser User
         {
-            if (user == null)
-                user = RacetimeUser.RaceBot.Name;
-            if (!string.IsNullOrEmpty(msg) && user != null)
-                return new ChatMessage(MessageType.User) { Message = msg, User = user, Posted = posted.HasValue ? posted.Value : DateTime.Now, Highlight=isHighlight, IsSystem=isSystem };
-            return null;
+            get
+            {
+                try
+                {
+                    return RTModelBase.Create<RacetimeUser>(Data.user);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
         }
-        public static ChatMessage CreateError(string msg, DateTime? posted)
+        public DateTime Posted
         {
-            if (!string.IsNullOrEmpty(msg))
-                return new ChatMessage(MessageType.Error) { Message = msg, User = RacetimeUser.RaceBot.Name, Posted = posted.HasValue ? posted.Value : DateTime.Now };
-            return null;
+            get
+            {
+                try
+                {
+                    if (Data.posted_at == null)
+                        return DateTime.MaxValue;
+                    return DateTime.Parse(Data.posted_at);
+                }
+                catch
+                {
+                    return DateTime.MaxValue;
+                }
+            }
         }
-
-        public static ChatMessage CreateRace(Race race, DateTime? posted)
+        public bool Highlight
         {
-            if (race != null)
-                return new ChatMessage(MessageType.Race) { Race = race, User =null, Posted = posted.HasValue ? posted.Value : DateTime.Now };
-            return null;
+            get
+            {
+                try
+                {
+                    return Data.highlight;
+                }
+                catch
+                {
+                    return false;
+                }
+               
+            }
         }
-
-        public static ChatMessage CreateSystem(string msg, DateTime? posted)
+        public bool IsSystem
         {
-            if (!string.IsNullOrEmpty(msg))
-                return new ChatMessage(MessageType.System) { Message = msg, User = null, Posted = posted.HasValue ? posted.Value : DateTime.Now };
-            return null;
+            get
+            {
+                try
+                {
+                    return Data.is_system;
+                }
+                catch
+                {
+                    return false;
+                }
+                
+            }
         }
-
-        public static IEnumerable<ChatMessage> Deserialize(dynamic m, IEnumerable<RacetimeUser> userlist)
+        
+        public static IEnumerable<ChatMessage> Parse(dynamic m)
         {
+            Console.WriteLine(m.GetType().ToString() + m.ToString());
             switch (m.type)
             {
                 case "error":
-                    foreach (var msg in m.errors)
-                        yield return CreateError(msg, null);
+                    yield return RTModelBase.Create<ErrorMessage>(m);
                     break;
                 case "race.data":
-                    yield return CreateRace(Race.Deserialize(m.race), null);
+                    yield return RTModelBase.Create<RaceMessage>(m.race);
                     break;
                 case "chat.message":
-                    //RacetimeUser y = ;
-                    //var user = RacetimeUser.Anonymous;
-                    //if (userlist != null)
-                    //   user = userlist?.FirstOrDefault(u => u.Id == m.message.user.id);
-                    yield return CreateUser(m.message.message, m.message.user?.name, m.is_system == null ? false : m.is_system, m.highlight == null? false:m.highlight, null);
+                    if(m.message.is_system)
+                        yield return RTModelBase.Create<RaceBotMessage>(m.message);
+                    else
+                        yield return RTModelBase.Create<UserMessage>(m.message);
                     break;
                 case "livesplit":
-                    yield return CreateSystem(m.message, null);
+                    yield return RTModelBase.Create<LiveSplitMessage>(m.message);
                     break;
             }
             yield break;
         }
 
+    }
+
+    public class LiveSplitMessage : ChatMessage
+    {
+        public override MessageType Type => MessageType.LiveSplit;
+
+        public override RacetimeUser User
+        {
+            get
+            {
+                return RacetimeUser.LiveSplit;
+            }
+        }
+
+        public static LiveSplitMessage Create(string msg, bool important)
+        {
+            var dataroot = new
+            {
+                message = msg,
+                user = RacetimeUser.LiveSplit,
+                posted_at = DateTime.Now,
+                highlight = important,
+                is_system = true                   
+            };
+            return Create<LiveSplitMessage>(dataroot);
+        }
+    }
+    public class RaceBotMessage : ChatMessage
+    {
+        public override MessageType Type => MessageType.RaceBot;
+
+        public override RacetimeUser User
+        {
+            get
+            {
+                return RacetimeUser.RaceBot;
+            }
+        }
+    }
+    public class UserMessage : ChatMessage
+    {
+        public override MessageType Type => MessageType.User;
+    }
+    public class ErrorMessage : ChatMessage
+    {
+        public override MessageType Type => MessageType.Error;
+
+        public override RacetimeUser User
+        {
+            get
+            {
+                return RacetimeUser.RaceBot;
+            }
+        }
+
+        public override string Message
+        {
+            get
+            {
+                try
+                {
+                    string msg = "";
+                    foreach(var s in Data.errors)
+                        msg += s + " ";
+                    return msg;
+                }
+                catch
+                {
+                    return "Error in the error message";
+                }
+            }
+                
+        }
+    }
+    public class RaceMessage : ChatMessage
+    {
+        public override MessageType Type => MessageType.Race;
+
+        public Race Race
+        {
+            get
+            {
+                return RTModelBase.Create<Race>(Data);
+            }
+        }
     }
 }

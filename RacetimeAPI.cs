@@ -72,7 +72,7 @@ namespace LiveSplit.Racetime
         
             foreach (var r in races)
             {
-                yield return Race.Deserialize(r);
+                yield return RTModelBase.Create<Race>(r);
             }
             yield break;
         }

@@ -7,37 +7,144 @@ using System.Threading.Tasks;
 
 namespace LiveSplit.Racetime.Model
 {
-    public class Race
+    public class Race : RTModelBase
     {
-        public bool AllowNonEntrantChat { get; set; }
-        public bool AllowMidraceChat { get; set; }
-        public bool AllowComments { get; set; }
-        public string ID { get; set; }
-        public string ChannelName { get; set; }
-        public string Name { get; set; }
-        public string Abbreviation { get; set; }
-        public string Goal { get; set; }
-        public string Info { get; set; }
-        public string Image { get; set; }
-        public TimeSpan StartDelay { get; set; }
-        public int NumEntrants { get; set; }
-        public List<RacetimeUser> Entrants { get; set; }
-        public string GameSlug { get; set; }
-        public RaceState State { get; set; }
-        public DateTime? StartedAt { get; set; }
-        public TimeSpan Elapsed
+        public bool AllowNonEntrantChat
         {
             get
             {
-                if (!StartedAt.HasValue)
-                    return TimeSpan.Zero;
-
-                TimeSpan elapsed = TimeStamp.CurrentDateTime - StartedAt.Value;
-                if (elapsed < TimeSpan.Zero)
-                    elapsed = TimeSpan.Zero;
-                return elapsed;
+                return false;
             }
         }
+        public bool AllowMidraceChat
+        {
+            get
+            {
+                return Data.allow_midrace_chat;
+            }
+        }
+        public bool AllowComments
+        {
+            get
+            {
+                return Data.allow_comments;
+            }
+        }
+        public string ID
+        {
+            get
+            {
+                return Data.name;
+            }
+        }
+        public string ChannelName
+        {
+            get
+            {
+                return ID.Substring(0,ID.IndexOf('/'));
+            }
+        }
+        public string Name
+        {
+            get
+            {
+                return Data.name;
+            }
+        }
+        public string Goal
+        {
+            get
+            {
+                try
+                {
+                    return Data.goal.name;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+        public string Info
+        {
+            get
+            {
+                try
+                {
+                    return Data.info;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+        public TimeSpan StartDelay
+        {
+            get
+            {
+                try
+                {
+                    return TimeSpan.Parse(Data.start_delay);
+                }
+                catch
+                {
+                    return TimeSpan.Zero;
+                }
+            }
+        }
+        public int NumEntrants
+        {
+            get
+            {
+                return Data.entrants_count;
+            }
+        }
+        public IEnumerable<RacetimeUser> Entrants
+        {
+            get
+            {
+                foreach(var e in Data.entrants)
+                {
+                    yield return RTModelBase.Create<RacetimeUser>(e);
+                }
+            }
+        }
+        public string GameSlug
+        {
+            get
+            {
+                return ID.Substring(ID.IndexOf('/')+1);
+            }
+        }
+        public RaceState State
+        {
+            get
+            {
+                switch(Data.status.value)
+                {
+                    case "open": return RaceState.Open; 
+                    default: return RaceState.Unknown;
+                }
+            }
+        }
+        public DateTime? StartedAt
+        {
+            get
+            {
+                try
+                {
+                    if (Data.started_at == null)
+                        return DateTime.MaxValue;
+                    return DateTime.Parse(Data.started_at);
+                }
+                catch
+                {
+                    return DateTime.MaxValue;
+                }
+            }
+        }
+       
         public int NumFinishes
         {
             get
@@ -52,75 +159,28 @@ namespace LiveSplit.Racetime.Model
                 return Entrants.Count(x => x.Status == UserStatus.Forfeit || x.Status == UserStatus.Disqualified);
             }
         }
-        public DateTime OpenedAt { get; set; }
-        public RacetimeUser OpenedBy { get; set; }
-
-        protected Race(string id)
+        public DateTime OpenedAt
         {
-            ID = id;
-            NumEntrants = 0;
-            Entrants = new List<RacetimeUser>();
-            GameSlug = id.Split('/')[0];
-            ChannelName = id.Split('/')[1];            
-        }
-
-        public override bool Equals(object obj)
-        {
-            return ID == ((Race)obj).ID;
-        }
-
-        public static Race Create(string id)
-        {
-            if (!string.IsNullOrEmpty(id))
-                return new Race(id);
-            return null;
-        }
-
-        public static Race Deserialize(dynamic r)
-        {
-            Race race = null;
-            try
+            get
             {
-                race = Race.Create(r?.name);
-            }
-            catch
-            {
-                return race;
-            }
-
-            try
-            {
-                race.AllowNonEntrantChat = true;
-                race.AllowMidraceChat = r.allow_midrace_chat == null ? false : r.allow_midrace_chat == true;
-                race.AllowComments = r.allow_comments == null ? false : r.allow_comments == true;
-                race.Goal = r.goal.name;
-                race.Info = r.info;
-                race.NumEntrants = r.entrants_count;
-                race.OpenedAt = DateTime.Parse(r.opened_at);
-                if(r.start_delay != null)
-                    race.StartDelay = TimeSpan.Parse(r.start_delay);
-                race.OpenedBy = RacetimeUser.DeserializeUser(r.opened_by);
-
-                switch (r.status.value)
+                try
                 {
-                    case "open": race.State = RaceState.Open; break;
-                    default: race.State = RaceState.Unknown; break;
+                    if (Data.opened_at == null)
+                        return DateTime.MaxValue;
+                    return DateTime.Parse(Data.opened_at);
                 }
-
-                race.Entrants.Clear();
-                foreach (var ent in r.entrants)
+                catch
                 {
-                    var e = RacetimeUser.DeserializeEntrant(ent);
-                    if (e != null)
-                        race.Entrants.Add(e);
+                    return DateTime.MaxValue;
                 }
             }
-            catch(Exception ex)
+        }
+        public RacetimeUser OpenedBy
+        {
+            get
             {
-                Console.WriteLine(ex.Message);
+                return RTModelBase.Create<RacetimeUser>(Data.opened_by);
             }
-
-            return race;            
         }
     }
 }

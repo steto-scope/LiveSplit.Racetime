@@ -100,6 +100,7 @@ namespace LiveSplit.Racetime.Controller
                 Authenticator.RequestUserInfo();
                 SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
             }
+            Authenticator.Finalize();
 
 connect:
             //opening the socket
@@ -148,19 +149,17 @@ connect:
                     string msg = Encoding.UTF8.GetString(bytesReceived.Array, 0, result.Count);
                     RawMessageReceived?.Invoke(this, msg);
 
-                    Console.WriteLine(msg);
                     
-                    IEnumerable<ChatMessage> chatmessages = ChatMessage.Deserialize(JSON.FromString(msg), Race?.Entrants);
+                    IEnumerable<ChatMessage> chatmessages = ChatMessage.Parse(JSON.FromString(msg));
                    
-                    MessageReceived?.Invoke(this, chatmessages);
-                    ChatMessage racemessage = chatmessages.FirstOrDefault(x => x.Type == MessageType.Race);
                     
+                    ChatMessage racemessage = chatmessages.FirstOrDefault(x => x.Type == MessageType.Race);                    
                     if(racemessage!= null)
                     {
-                        UpdateRaceData(racemessage);
+                        UpdateRaceData((RaceMessage)racemessage);
                     }
-                    
-                    
+                    MessageReceived?.Invoke(this, chatmessages);
+
                 }
                 catch(Exception ex)
                 {
@@ -196,8 +195,9 @@ connect:
 
         
             
-        private void UpdateRaceData(ChatMessage msg)
+        private void UpdateRaceData(RaceMessage msg)
         {
+            
             if (Race == null)
             {
                 Race = msg.Race;
@@ -205,19 +205,13 @@ connect:
                 UserListRefreshed?.Invoke(this, new EventArgs());
                 return;
             }
-         
 
-            if(Race.Goal != msg.Race.Goal)
-            {
-                Race.Goal = msg.Race.Goal ?? "No Goal set";
+
+            if (Race.Goal != msg.Race.Goal)
+            {                
                 GoalChanged?.Invoke(this, new EventArgs());
             }         
-
-            Race.Entrants.Clear();
-            foreach(var e in msg.Race.Entrants)
-            {
-                Race.Entrants.Add(e);
-            }
+           
             UserListRefreshed?.Invoke(this, new EventArgs());
 
             switch(msg.Race.State)
@@ -246,8 +240,9 @@ connect:
                     break;
             }
 
-            Race.State = msg.Race.State;
             StateChanged?.Invoke(this, Race.State);
+
+            Race = msg.Race;
 
         }
 
@@ -327,9 +322,9 @@ connect:
             }
         }
 
-        public void SendSystemMessage(string message)
+        public void SendSystemMessage(string message, bool important = false)
         {
-            MessageReceived?.Invoke(this, ChatMessage.Deserialize(JSON.FromString("{ \"type\":\"livesplit\", \"message\":\""+message+"\" }"), Race?.Entrants));
+            MessageReceived?.Invoke(this,  new ChatMessage[] { LiveSplitMessage.Create(message, important) });
         }
 
         public void Ready() => SendChannelMessage(".ready");

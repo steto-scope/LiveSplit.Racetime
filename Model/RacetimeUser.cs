@@ -7,111 +7,164 @@ using System.Threading.Tasks;
 
 namespace LiveSplit.Racetime.Model
 {
-    public class RacetimeUser
+    public class RacetimeUser : RTModelBase
     {
-        public string Id { get; protected set; }
-        public string Name { get; protected set; }
-        public string TwitchChannel { get; set; }
-        public string TwitchName { get; set; }
-        public UserRole Role { get; set; }
-        public UserStatus Status { get; set; }
-        
-        public int FinishTime { get; set; }
-        public int Place { get; set; }
-        public string PlaceOrdinal { get; set; }
-        public string Comment { get; set; }
-        public bool IsLive { get; set; }
-
-        public static RacetimeUser RaceBot = Create("RaceBot", "RaceBot", UserRole.Bot);
-        public static RacetimeUser LiveSplit = Create("LiveSplit", "LiveSplit", UserRole.System);
-        public static RacetimeUser Anonymous = Create("Anonymous", "Anonymous", UserRole.Anonymous);
-
-        private RacetimeUser(string id, string name)
+        public string Id
         {
-            Id = id;
-            Name = name;
+            get
+            {
+                return Data.id ?? "";
+            }
         }
-
-        public static RacetimeUser Create(string id, string name, UserRole role = UserRole.Unknown)
+        public string Name
         {
-            if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(name))
-                return new RacetimeUser(id, name) { Role = role };
-            return null;
+            get
+            {
+                return Data.name ?? "";
+            }
         }
-
-        public static RacetimeUser DeserializeEntrant(dynamic e)
+        public string TwitchChannel
         {
-            if (e?.user == null)
-                return null;
-
-            RacetimeUser user = null;
-
-            try
+            get
             {
-                user = DeserializeUser(e);
+                return Data.twitch_channel;
             }
-            catch
-            {
-                return user;
-            }
-
-            try
-            {
-                
-                user.FinishTime = e.finish_time;
-                user.Place = e.place;
-                user.PlaceOrdinal = e.place_ordinal;
-                user.Comment = e.comment;
-                user.IsLive = e.stream_live;
-                return user;
-            }
-            catch { }
-
-            return user;
         }
-          
-        public static RacetimeUser DeserializeUser(dynamic u)
+        public string TwitchName
         {
-            if (u?.user == null)
-                return null;
-            RacetimeUser user = null;
-            try
+            get
             {
-                 user = RacetimeUser.Create(u.user.id, u.user.name);
+                return Data.twitch_name;
             }
-            catch
+        }
+        public UserRole Role
+        {
+            get
             {
-                return user;
-            }
+                UserRole r = UserRole.Regular;
 
-            try
-            {
-                user.TwitchChannel = u.user.twitch_channel;
-                user.TwitchName = u.user.twitch_name;
+                if (Data.user.flair == null)
+                    return UserRole.Unknown;
 
-                string[] flairs = u.user.flair?.ToString().Split(' ');
-                user.Role = UserRole.Unknown;
-                foreach(string f in flairs)
+                string[] flairs = Data.user.flair.ToString().Split(' ');
+                foreach (string f in flairs)
                 {
-                    switch(f)
+                    switch (f)
                     {
-                        case "staff": user.Role |= UserRole.Staff; break;
-                        case "moderator": user.Role |= UserRole.Moderator; break;
-                        case "monitor": user.Role |= UserRole.Monitor; break;
-                    }
+                        case "staff": r |= UserRole.Staff; break;
+                        case "moderator": r |= UserRole.Moderator; break;
+                        case "monitor": r |= UserRole.Monitor; break;
+                        case "bot": r |= UserRole.Bot; break;
+                        case "system": r |= UserRole.System; break;
+                        case "anonymous": r |= UserRole.Anonymous; break;
+                    } 
                 }
+                return r;
+            }
+        }
+        public UserStatus Status
+        {
+            get
+            {
+                UserStatus s = UserStatus.Unknown;
+                if (Data.status == null)
+                    return UserStatus.Unknown;
 
-           
-                switch (u.status?.value)
+                switch (Data.status.value)
                 {
-                    case "not_ready": user.Status = UserStatus.NotReady; break;
-                    case "ready": user.Status = UserStatus.Ready; break;
-                    default: user.Status = UserStatus.Unknown; break;
+                    case "not_ready": s = UserStatus.NotReady; break;
+                    case "ready": s = UserStatus.Ready; break;
+                    default:s = UserStatus.Unknown; break;
+                }
+                return s;
+            }
+        }
+        
+        public int FinishTime
+        {
+            get
+            {
+                try
+                {
+                    return Data.finish_time;
+                }
+                catch
+                {
+                    return 0;
                 }
             }
-            catch { }
+        }
+        public int Place
+        {
+            get
+            {
+                try
+                {
+                    return Data.place;
+                }
+                catch
+                {
+                    return int.MaxValue;
+                }
+            }
+        }
+        public string PlaceOrdinal
+        {
+            get
+            {
+                try
+                {
+                    return Data.place_ordinal;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+        public string Comment
+        {
+            get
+            {
+                try
+                {
+                    return Data.comment;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+        public bool IsLive
+        {
+            get
+            {
+                try
+                {
+                    return Data.stream_live || Data.stream_override;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
 
-            return user;
+        public static RacetimeUser RaceBot = CreateBot("RaceBot", "bot staff moderator monitor");
+        public static RacetimeUser LiveSplit = CreateBot("LiveSplit", "system staff moderator monitor");
+        public static RacetimeUser Anonymous = CreateBot("Anonymous", "anonymous");
+
+        
+        public static RacetimeUser CreateBot(string botname, string flairs)
+        {
+            var dataroot = new
+            {
+                    name = botname,
+                    id = botname,
+                    flair = flairs,
+            };
+            return Create<RacetimeUser>(dataroot);
         }
     }
 }

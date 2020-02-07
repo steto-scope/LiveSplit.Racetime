@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Controller\RacetimeChannel.cs" />
     <Compile Include="Controller\RacetimeAuthenticator.cs" />
+    <Compile Include="Model\DataModelBase.cs" />
     <Compile Include="RacetimeAPI.cs" />
     <Compile Include="Model\MessageType.cs" />
     <Compile Include="Model\ChatMessage.cs" />

@@ -140,6 +140,11 @@ namespace LiveSplit.Racetime.Controller
             RefreshToken = null;
             CodeVerifier = null;
             TokenExpireDate = new DateTime(0);
+            Finalize();
+        }
+
+        public void Finalize()
+        {
             if (localEndpoint != null)
             {
                 localEndpoint.Stop();
@@ -328,7 +333,7 @@ namespace LiveSplit.Racetime.Controller
                 using (var response = request.GetResponse())
                 {
                     var userdata = JSON.FromResponse(response);
-                    Identity = RacetimeUser.DeserializeUser(JSON.FromString("{ \"user\": "+userdata+" } "));
+                    Identity = RTModelBase.Create<RacetimeUser>(JSON.FromString("{ \"user\": "+userdata+" } "));
                     Console.WriteLine(Identity.Name);
                     return Identity;
                 }

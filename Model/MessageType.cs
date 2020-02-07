@@ -12,6 +12,7 @@ namespace LiveSplit.Racetime.Model
         User,
         Error,
         Race,
-        System
+        RaceBot,
+        LiveSplit
     }
 }
