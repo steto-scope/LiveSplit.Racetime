@@ -51,6 +51,8 @@
             this.goalLabel = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.infoLabel = new System.Windows.Forms.LinkLabel();
+            this.forceReloadButton = new DarkUI.Controls.DarkButton();
+            this.forceReloadToolTip = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -181,6 +183,7 @@
             // 
             this.flowLayoutPanel1.Controls.Add(this.hideFinishesCheckBox);
             this.flowLayoutPanel1.Controls.Add(this.hideChatCheckBox);
+            this.flowLayoutPanel1.Controls.Add(this.forceReloadButton);
             this.flowLayoutPanel1.Controls.Add(this.saveLogButton);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
@@ -213,7 +216,7 @@
             // 
             // saveLogButton
             // 
-            this.saveLogButton.Location = new System.Drawing.Point(221, 3);
+            this.saveLogButton.Location = new System.Drawing.Point(321, 3);
             this.saveLogButton.Name = "saveLogButton";
             this.saveLogButton.Padding = new System.Windows.Forms.Padding(5);
             this.saveLogButton.Size = new System.Drawing.Size(70, 23);
@@ -363,6 +366,23 @@
             this.infoLabel.TabIndex = 5;
             this.infoLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // forceReloadButton
+            // 
+            this.forceReloadButton.Location = new System.Drawing.Point(221, 3);
+            this.forceReloadButton.Name = "forceReloadButton";
+            this.forceReloadButton.Padding = new System.Windows.Forms.Padding(5);
+            this.forceReloadButton.Size = new System.Drawing.Size(94, 23);
+            this.forceReloadButton.TabIndex = 3;
+            this.forceReloadButton.Text = "Force Reload";
+            this.forceReloadToolTip.SetToolTip(this.forceReloadButton, "Forces a refresh of Chat, Userlist  and Timer");
+            this.forceReloadButton.Click += new System.EventHandler(this.forceReloadButton_Click);
+            // 
+            // forceReloadToolTip
+            // 
+            this.forceReloadToolTip.AutoPopDelay = 15000;
+            this.forceReloadToolTip.InitialDelay = 300;
+            this.forceReloadToolTip.ReshowDelay = 100;
+            // 
             // ChannelForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -430,5 +450,7 @@
         private System.Windows.Forms.Label goalLabel;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.LinkLabel infoLabel;
+        private DarkUI.Controls.DarkButton forceReloadButton;
+        private System.Windows.Forms.ToolTip forceReloadToolTip;
     }
 }

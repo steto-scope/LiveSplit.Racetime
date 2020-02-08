@@ -275,10 +275,10 @@ namespace LiveSplit.Racetime.Controller
                 return new Tuple<int, dynamic>(500, null);
             }
         }
-        public async Task<string> RequestAccessToken(string refreshToken = null)
+        public async Task<bool> RequestAccessToken(string refreshToken = null)
         {
             if (!IsAuthenticated)
-                return null;
+                return false;
 
             string tokenRequestBody = null;
             if (refreshToken == null)
@@ -315,10 +315,10 @@ namespace LiveSplit.Racetime.Controller
                 
                
 
-                return AccessToken;
+                return true;
             }
 
-            return null;
+            return false;
         }
 
         public RacetimeUser RequestUserInfo()

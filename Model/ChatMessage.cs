@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace LiveSplit.Racetime.Model
@@ -117,6 +118,14 @@ namespace LiveSplit.Racetime.Model
             get
             {
                 return RacetimeUser.RaceBot;
+            }
+        }
+
+        public bool IsFinishingMessage
+        {
+            get
+            {
+                return Regex.IsMatch(Message, "(finish|forfeit|comment|done)", RegexOptions.IgnoreCase);
             }
         }
     }

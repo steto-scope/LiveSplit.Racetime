@@ -50,6 +50,7 @@ namespace LiveSplit.Racetime.View
             /*if (user.StreamOverride)
                 liveStatusImage.Image = Properties.Resources.live_and_ready;*/
 
+            Console.WriteLine(user.FinishTime);
             timeLabel.Text = (user.FinishTime > TimeSpan.Zero) ? string.Format(string.Format("{0:hh\\:mm\\:ss}", user.FinishTime)) : "";
 
         }

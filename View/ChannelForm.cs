@@ -34,10 +34,11 @@ namespace LiveSplit.Racetime.View
 
         private static readonly Color[] ColorList = new Color[]
         {
-            Color.Aqua,
-            Color.Aquamarine,
-            Color.Cornsilk,
-            Color.Crimson
+            Color.FromArgb(255,179,186),
+            Color.FromArgb(255,223,186),
+            Color.FromArgb(255,255,186),
+            Color.FromArgb(186,255,201),
+            Color.FromArgb(186,225,255)
         };
 
         public ChannelForm(RacetimeChannel channel, string channelId, bool alwaysOnTop = true)
@@ -85,28 +86,35 @@ namespace LiveSplit.Racetime.View
 
             foreach(ChatMessage m in chatMessages)
             {
-                Console.WriteLine(m);
                 if (m.Type == MessageType.Race)
+                    continue;
+                if (hideFinishesCheckBox.Checked && m is RaceBotMessage && ((RaceBotMessage)m).IsFinishingMessage)
                     continue;
 
                 chatBox.AppendText("\n");
-                chatBox.AppendText(m.Posted.ToString("HH:mm"), Color.ForestGreen);
+                chatBox.AppendText(m.Posted.ToString("HH:mm"), Color.Silver, Color.White);
                 chatBox.AppendText("  ");
 
-                Color col;
-                if (m.User == null || m.User == RacetimeUser.RaceBot)
-                    col = Color.White;
+                Color col = Color.White;
+                RacetimeUser u = RacetimeUser.Anonymous;
+                bool hideUsername = m.User == null || m.User == RacetimeUser.LiveSplit || (m.User == RacetimeUser.RaceBot && !m.IsSystem);
+
+                if (m.User == RacetimeUser.RaceBot)
+                    col = Color.Red;
                 else
                 {
                     col = ColorList[Math.Abs(m.User.Class) % ColorList.Length];
                 }
-                if (m.IsSystem)
-                    col = Color.Red;
+                
+                if(!hideUsername)
+                    chatBox.AppendText(m.User == RacetimeUser.RaceBot ? "["+m.User.Name+"]" : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
 
-                if(m.User!=null && m.User != RacetimeUser.LiveSplit)
-                    chatBox.AppendText(m.User.Name, col, true);
                 chatBox.AppendText("  ");
-                chatBox.AppendText(m.Message);
+                if (m.Highlight)
+                    chatBox.AppendText(m.Message, chatBox.ForeColor, Color.SlateGray, true);
+                else
+                    chatBox.AppendText(m.Message);
+
                 chatBox.SelectionStart = chatBox.Text.Length;
                 chatBox.ScrollToCaret();
             }
@@ -152,6 +160,9 @@ namespace LiveSplit.Racetime.View
 
         private void Channel_UserListRefreshed(object sender, EventArgs e)
         {
+            if (hideFinishesCheckBox.Checked)
+                return;
+
             userlist.Clear();
             foreach(RacetimeUser u in Channel.Race.Entrants)
             {
@@ -216,6 +227,7 @@ namespace LiveSplit.Racetime.View
 
         private void actionButton_Click(object sender, EventArgs e)
         {
+            DialogResult r = DialogResult.None;
             actionButton.Enabled = false;
             switch(Channel.PersonalStatus)
             {
@@ -231,9 +243,20 @@ namespace LiveSplit.Racetime.View
                     Channel.SendChannelMessage(".quit");
                     break;*/
                 case UserStatus.Racing:
-                    Channel.SendChannelMessage(".forfeit");
-                    break;
+                    r = MessageBox.Show("Are you sure that you want forfeit this race?", "", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (r == DialogResult.Yes)
+                        Channel.SendChannelMessage(".forfeit");
+                    else
+                        Channel_StateChanged(sender, Channel.Race.State);
+                    break;               
+                
                 case UserStatus.Finished:
+                    r = MessageBox.Show("You are already done. Are you sure?", "", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (r == DialogResult.Yes)
+                        Channel.SendChannelMessage(".undone");
+                    else
+                        Channel_StateChanged(sender, Channel.Race.State);
+                    break;
                 case UserStatus.Forfeit:
                     Channel.SendChannelMessage(".undone");
                     break;
@@ -242,7 +265,7 @@ namespace LiveSplit.Racetime.View
 
         private void Channel_ChannelJoined(object sender, EventArgs e)
         {
-            
+            forceReloadButton.Enabled = true;
         }
 
         private void ChannelWindow_Load(object sender, EventArgs e)
@@ -274,6 +297,19 @@ namespace LiveSplit.Racetime.View
 
         private void ChannelForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if(Channel.Race.State == RaceState.Started && Channel.PersonalStatus == UserStatus.Racing)
+            {
+                DialogResult r = MessageBox.Show("Do you want to FORFEIT before closing the window?", "", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
+                if(r == DialogResult.Yes)
+                {
+                    Channel.Forfeit();                   
+                }
+                else if(r == DialogResult.Cancel)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
             formClosing = true;
             Channel.ChannelJoined -= Channel_ChannelJoined;
             Channel.StateChanged -= Channel_StateChanged;
@@ -327,6 +363,11 @@ namespace LiveSplit.Racetime.View
                 }
             }
             
+        }
+
+        private void forceReloadButton_Click(object sender, EventArgs e)
+        {
+            Channel.ForceReload();
         }
     }       
 }

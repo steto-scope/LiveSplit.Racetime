@@ -56,13 +56,13 @@ namespace LiveSplit.Racetime.Controller
         
 
 
-        CancellationTokenSource wscts;
-        CancellationTokenSource rccts;
+        CancellationTokenSource websocket_cts;
+        CancellationTokenSource reconnect_cts;
 
         public RacetimeChannel(LiveSplitState state, ITimerModel model)
         {
-            rccts = new CancellationTokenSource();
-            RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 3), rccts.Token);
+            reconnect_cts = new CancellationTokenSource();
+            RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 3), reconnect_cts.Token);
 
             Authenticator = new RacetimeAuthenticator();
             this.Model = model;
@@ -80,13 +80,21 @@ namespace LiveSplit.Racetime.Controller
 
         private async Task<bool> ReceiveAndProcess()
         {
-            ArraySegment<byte> bytesReceived = new ArraySegment<byte>(new byte[1024 * 10]);
-            WebSocketReceiveResult result = await ws.ReceiveAsync(bytesReceived, wscts.Token);
-            if (result == null)
-                return false;
+            ArraySegment<byte> bytesReceived = new ArraySegment<byte>(new byte[1024 * 100]);
+            string msg = "";
+            try
+            {
+                WebSocketReceiveResult result = await ws.ReceiveAsync(bytesReceived, websocket_cts.Token);
+                if (result == null)
+                    return false;
 
-            var msg = Encoding.UTF8.GetString(bytesReceived.Array, 0, result.Count);
-            RawMessageReceived?.Invoke(this, msg);
+                msg = Encoding.UTF8.GetString(bytesReceived.Array, 0, result.Count);
+                RawMessageReceived?.Invoke(this, msg);
+            }
+            catch
+            {
+                return false;
+            }
 
 
             IEnumerable<ChatMessage> chatmessages = Parse(JSON.FromString(msg));
@@ -104,27 +112,24 @@ namespace LiveSplit.Racetime.Controller
 
         public async Task RunAsync(string id)
         {
-            wscts = new CancellationTokenSource();
+            websocket_cts = new CancellationTokenSource();
             ws = new ClientWebSocket();
 
             //authorize user
             if (Authenticator.AccessToken != null)
                 goto connect;
-            
-            await Authenticator.Authorize();
-            await Authenticator.RequestAccessToken();
 
-            Console.WriteLine(Authenticator.AccessToken);
-            Console.WriteLine(Authenticator.Identity);
-            if(Authenticator.AccessToken == null)
-            {
-                AuthenticationFailed?.Invoke(this, new EventArgs());
-                return;
-            }
-            else
+
+            if(await Authenticator.Authorize() && await Authenticator.RequestAccessToken() && Authenticator.AccessToken != null)
             {
                 Authenticator.RequestUserInfo();
                 SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
+                
+            }
+            else
+            {
+                AuthenticationFailed?.Invoke(this, new EventArgs());
+                return;
             }
             Authenticator.Finalize();
 
@@ -133,7 +138,7 @@ connect:
             ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
             try
             {
-                await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/o/race/" + id), wscts.Token);
+                await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/o/race/" + id), websocket_cts.Token);
             }
             catch(WebSocketException wex)
             {
@@ -152,14 +157,13 @@ connect:
                 ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"getrace\" }"));
                 ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
                 await ReceiveAndProcess();
+                SendSystemMessage("Loading chat history...");
                 ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
                 ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
                 await ReceiveAndProcess();
             }
 
-            Console.WriteLine(new Uri(FullSocketRoot + "ws/o/race/" + id).AbsoluteUri);
-
-            while (ws.State == WebSocketState.Open && !wscts.IsCancellationRequested)
+            while (ws.State == WebSocketState.Open && !websocket_cts.IsCancellationRequested)
             {
 
                 try
@@ -205,6 +209,13 @@ connect:
             }
 
 
+        }
+
+        public async void ForceReload()
+        {
+            ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
+            ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
+            await ReceiveAndProcess();
         }
 
         
@@ -273,7 +284,7 @@ connect:
 
         public IEnumerable<ChatMessage> Parse(dynamic m)
         {
-            Console.WriteLine(m.GetType().ToString() + m.ToString());
+           // Console.WriteLine(m.GetType().ToString() + m.ToString());
             switch (m.type)
             {
                 case "error":
@@ -345,10 +356,16 @@ connect:
         public void Disconnect()
         {
            
-            wscts.Cancel();
-            rccts.Cancel();
+            websocket_cts.Cancel();
+            reconnect_cts.Cancel();
             ws.Dispose();
             Console.WriteLine("Disconnect");
+        }
+
+        public void Forfeit()
+        {
+            SendChannelMessage(".forfeit");
+            Model.Reset();
         }
         
         public void RemoveRaceComparisons()
@@ -379,7 +396,7 @@ connect:
 
             if (ws.State == WebSocketState.Open)
             {               
-                await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, wscts.Token);
+                await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, websocket_cts.Token);
             }
         }
 

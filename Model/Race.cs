@@ -106,6 +106,7 @@ namespace LiveSplit.Racetime.Model
             {
                 try
                 {
+                    Console.WriteLine(TimeSpan.Parse(Data.start_delay));
                     return TimeSpan.Parse(Data.start_delay);
                 }
                 catch

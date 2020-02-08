@@ -10,15 +10,22 @@ namespace LiveSplit.Racetime.View
 {
     public static class RichTextBoxExtensions
     {
-        public static void AppendText(this RichTextBox box, string text, Color color, bool bold=false)
+        public static Font NormalFont = new Font("Microsoft Sans Serif",10, FontStyle.Regular);
+        public static Font BoldFont = new Font("Microsoft Sans Serif",10, FontStyle.Bold);
+        public static Font ItalicFont = new Font("Microsoft Sans Serif", 10, FontStyle.Italic);
+
+
+        public static void AppendText(this RichTextBox box, string text, Color color, Color highlightcolor,bool highlight=false, bool bold=false)
         {
             box.SelectionStart = box.TextLength;
             box.SelectionLength = 0;
             
             box.SelectionColor = color;
-            if(bold) box.SelectionFont = new Font("Microsoft Sans Serif", 10, FontStyle.Bold);
+            if (highlight) box.SelectionBackColor = highlightcolor;
+            if (bold) box.SelectionFont = BoldFont;
             box.AppendText(text);
             if (bold) box.SelectionFont = box.Font;
+            if (highlight) box.SelectionBackColor = box.BackColor;
             box.SelectionColor = box.ForeColor;
         }
     }
