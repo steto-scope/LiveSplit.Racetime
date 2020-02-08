@@ -81,23 +81,26 @@ namespace LiveSplit.Racetime.Model
                 {
                     case "not_ready": s = UserStatus.NotReady; break;
                     case "ready": s = UserStatus.Ready; break;
+                    case "done": s = UserStatus.Finished; break;
+                    case "in_progress": s = UserStatus.Racing; break;
+                    case "dnf": s = UserStatus.Forfeit; break;
                     default:s = UserStatus.Unknown; break;
                 }
                 return s;
             }
         }
         
-        public int FinishTime
+        public TimeSpan FinishTime
         {
             get
             {
                 try
                 {
-                    return Data.finish_time;
+                    return TimeSpan.Parse(Data.finish_time);
                 }
                 catch
                 {
-                    return 0;
+                    return TimeSpan.Zero;
                 }
             }
         }
@@ -111,7 +114,7 @@ namespace LiveSplit.Racetime.Model
                 }
                 catch
                 {
-                    return int.MaxValue;
+                    return 0;
                 }
             }
         }
@@ -149,7 +152,21 @@ namespace LiveSplit.Racetime.Model
             {
                 try
                 {
-                    return Data.stream_live || Data.stream_override;
+                    return Data.stream_live;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+        public bool StreamOverride
+        {
+            get
+            {
+                try
+                {
+                    return Data.stream_override;
                 }
                 catch
                 {

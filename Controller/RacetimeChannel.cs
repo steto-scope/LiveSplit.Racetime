@@ -221,31 +221,46 @@ connect:
             }
 
 
-           
 
-            switch(msg.Race.State)
+
+            if (msg.Race.State != Race.State)
             {
-                case Racetime.Model.RaceState.Starting:
-                    Model.CurrentState.SetGameTime(TimeSpan.Zero);
-                    Model.CurrentState.Run.Offset = msg.Race.StartDelay;
-                    Model.Start();
-                    break;
-                case Racetime.Model.RaceState.Started:
-                    Model.CurrentState.SetGameTime(DateTime.Now - msg.Race.StartedAt);
-                    Model.Start();
-                    break;
-                case Racetime.Model.RaceState.Cancelled:
-                    Model.Reset();
-                    break;
+                switch (msg.Race.State)
+                {
+                    case Racetime.Model.RaceState.Starting:
+                        Model.CurrentState.SetGameTime(TimeSpan.Zero);
+                        Model.CurrentState.Run.Offset = new TimeSpan(0,0,-10);//msg.Race.StartDelay;
+                        Console.WriteLine(msg.Race.StartDelay);
+                        Model.Start();
+                        break;
+                    /*case Racetime.Model.RaceState.Started:
+                        Model.CurrentState.SetGameTime(DateTime.Now - msg.Race.StartedAt);
+                        Model.Start();
+                        break;*/
+                    case Racetime.Model.RaceState.Cancelled:
+                        Model.Reset();
+                        break;
+                }
             }
-            switch(PersonalStatus)
+
+            var newIdentity = msg.Race.Entrants?.FirstOrDefault(x => x.Name.ToLower() == Authenticator.Identity.Name.ToLower());
+            //Console.WriteLine(string.Join(" ",msg.Race.Entrants?.Select(x=>x.Name)));
+            switch(newIdentity?.Status)
             {
+                case UserStatus.Racing:
+                    Model.CurrentState.Run.Offset = DateTime.Now - msg.Race.StartedAt;
+                    Model.UndoSplit();
+                    Model.Start();
+                    break;
                 case UserStatus.Disqualified:
                     Model.Reset();
                     break;
-                case UserStatus.Finished:
-                case UserStatus.Forfeit:
+                case UserStatus.Finished:                    
                     Model.Split();
+                    Model.CurrentState.Run.Offset = newIdentity.FinishTime;
+                    break;
+                case UserStatus.Forfeit:
+                    Model.Reset();
                     break;
             }
 
@@ -295,17 +310,17 @@ connect:
 
         private void State_OnReset(object sender, TimerPhase value)
         {
-            Console.WriteLine("Timer Reset");
+           
         }
 
         private void State_OnUndoSplit(object sender, EventArgs e)
         {
-            Console.WriteLine("Undo Split");
+            
         }
 
         private void State_OnSplit(object sender, EventArgs e)
         {
-            Console.WriteLine("Split");
+            SendChannelMessage(".done");
         }
 
         public event EventHandler ChannelJoined;

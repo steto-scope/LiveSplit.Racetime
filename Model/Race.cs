@@ -21,7 +21,13 @@ namespace LiveSplit.Racetime.Model
                 twitch_name = e.user.twitch_name,
                 twitch_channel = e.user.twitch_channel,
                 discriminator = e.user.discriminator,
-                status = e.status
+                status = e.status,
+                place = e.place,
+                place_ordinal = e.place_ordinal,
+                finish_time = e.finish_time,
+                stream_live = e.stream_live,
+                comment = e.comment,
+                stream_override = e.stream_override
             };
         }
         public bool AllowNonEntrantChat
@@ -138,12 +144,15 @@ namespace LiveSplit.Racetime.Model
             {
                 switch(Data.status.value)
                 {
-                    case "open": return RaceState.Open; 
+                    case "open": return RaceState.Open;
+                    case "pending": return RaceState.Starting;
+                    case "in_progress": return RaceState.Started;
+                    case "finished": return RaceState.Ended;
                     default: return RaceState.Unknown;
                 }
             }
         }
-        public DateTime? StartedAt
+        public DateTime StartedAt
         {
             get
             {

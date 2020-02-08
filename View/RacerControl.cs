@@ -26,23 +26,31 @@ namespace LiveSplit.Racetime.View
             if(user.Place>0)
             {
                 placementLabel.Text = user.PlaceOrdinal;
-                placementLabel.Visible = true;
+                //placementLabel.Width = 10;
+                //placementLabel.Visible = true;
+
             }
             else
             {
-                placementLabel.Visible = false;
+                placementLabel.Text = "";
+                //placementLabel.Visible = false;
             }
 
 
             liveStatusImage.Image = null;
-            if (user.IsLive)
+            if (user.IsLive || user.StreamOverride)
+            {
                 liveStatusImage.Image = Properties.Resources.live;
+                if(user.Status == UserStatus.Ready || user.Status == UserStatus.Racing || user.Status == UserStatus.Finished)
+                    liveStatusImage.Image = Properties.Resources.live_and_ready;
+            }
             else if(user.TwitchChannel != null)
                 liveStatusImage.Image = Properties.Resources.not_live;
-            if (user.Status == UserStatus.Ready)
-                liveStatusImage.Image = Properties.Resources.live_and_ready;
 
-            timeLabel.Text = (user.FinishTime > 0) ? string.Format(string.Format("{0:hh\\:mm\\:ss}", TimeSpan.FromSeconds(user.FinishTime))) : "";
+            /*if (user.StreamOverride)
+                liveStatusImage.Image = Properties.Resources.live_and_ready;*/
+
+            timeLabel.Text = (user.FinishTime > TimeSpan.Zero) ? string.Format(string.Format("{0:hh\\:mm\\:ss}", user.FinishTime)) : "";
 
         }
     }

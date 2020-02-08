@@ -50,7 +50,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.goalLabel = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.infoLabel = new System.Windows.Forms.Label();
+            this.infoLabel = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -125,7 +125,7 @@
             this.chatBox.Location = new System.Drawing.Point(0, 0);
             this.chatBox.Name = "chatBox";
             this.chatBox.ReadOnly = true;
-            this.chatBox.Size = new System.Drawing.Size(500, 384);
+            this.chatBox.Size = new System.Drawing.Size(500, 379);
             this.chatBox.TabIndex = 0;
             this.chatBox.Text = "";
             // 
@@ -228,6 +228,7 @@
             this.inputBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.inputBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
             this.inputBox.Location = new System.Drawing.Point(0, 0);
+            this.inputBox.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.inputBox.Name = "inputBox";
             this.inputBox.Size = new System.Drawing.Size(499, 20);
             this.inputBox.TabIndex = 0;
@@ -284,6 +285,7 @@
             // splitContainer5
             // 
             this.splitContainer5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer5.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer5.Location = new System.Drawing.Point(0, 0);
             this.splitContainer5.Name = "splitContainer5";
             this.splitContainer5.Orientation = System.Windows.Forms.Orientation.Horizontal;
@@ -297,7 +299,8 @@
             // 
             this.splitContainer5.Panel2.Controls.Add(this.chatBox);
             this.splitContainer5.Size = new System.Drawing.Size(500, 400);
-            this.splitContainer5.SplitterDistance = 12;
+            this.splitContainer5.SplitterDistance = 20;
+            this.splitContainer5.SplitterWidth = 1;
             this.splitContainer5.TabIndex = 1;
             // 
             // flowLayoutPanel3
@@ -309,7 +312,7 @@
             this.flowLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel3.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel3.Name = "flowLayoutPanel3";
-            this.flowLayoutPanel3.Size = new System.Drawing.Size(500, 12);
+            this.flowLayoutPanel3.Size = new System.Drawing.Size(500, 20);
             this.flowLayoutPanel3.TabIndex = 0;
             // 
             // label2
@@ -323,6 +326,7 @@
             this.label2.Size = new System.Drawing.Size(37, 13);
             this.label2.TabIndex = 2;
             this.label2.Text = "Goal:";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // goalLabel
             // 
@@ -351,12 +355,13 @@
             // 
             this.infoLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.infoLabel.AutoSize = true;
-            this.infoLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.infoLabel.ForeColor = System.Drawing.Color.White;
+            this.infoLabel.LinkColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.infoLabel.Location = new System.Drawing.Point(91, 0);
             this.infoLabel.Name = "infoLabel";
             this.infoLabel.Size = new System.Drawing.Size(0, 13);
             this.infoLabel.TabIndex = 5;
+            this.infoLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // ChannelForm
             // 
@@ -424,6 +429,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label goalLabel;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label infoLabel;
+        private System.Windows.Forms.LinkLabel infoLabel;
     }
 }

@@ -40,7 +40,7 @@ namespace LiveSplit.Racetime.View
             Color.Crimson
         };
 
-        public ChannelForm(RacetimeChannel channel, string channelId, bool alwaysOnTop = false)
+        public ChannelForm(RacetimeChannel channel, string channelId, bool alwaysOnTop = true)
         {
             Channel = channel;
             Channel.ChannelJoined += Channel_ChannelJoined;
@@ -58,6 +58,7 @@ namespace LiveSplit.Racetime.View
             Show();
             Text = channelId.Substring(channelId.IndexOf('/')+1);
             Channel.Connect(channelId);
+            infoLabel.LinkClicked += (ss, args) => { if (urlPattern.IsMatch(infoLabel.Text)) Process.Start(infoLabel.Text.Substring(args.Link.Start,args.Link.Length)); };
         }
 
         private void Channel_RequestOutputReset(object sender, EventArgs e)
@@ -121,14 +122,15 @@ namespace LiveSplit.Racetime.View
             infoLabel.Text = s;
             //infoLabel.Text = s;
 
-            //MatchCollection mc = urlPattern.Matches(s);
+            MatchCollection mc = urlPattern.Matches(s);
 
 
             // int pos=0;
 
-            //l.Click += (ss, args) => { if (urlPattern.IsMatch(l.Text)) Process.Start(l.Text); };
-           // foreach (Match m in mc)
-            //{
+            //
+            infoLabel.Links.Clear();
+            foreach (Match m in mc)
+            {
 
                 /* {
                      Text = s.Substring(pos, m.Index + m.Length),
@@ -136,8 +138,8 @@ namespace LiveSplit.Racetime.View
                  };
                  
                  infoPanel.Controls.Add(l);*/
-                //l.Links.Add(m.Index, m.Length);
-            //}
+                infoLabel.Links.Add(m.Index, m.Length);
+            }
             
 
            /* if (pos < s.Length)
@@ -168,7 +170,7 @@ namespace LiveSplit.Racetime.View
                 case UserStatus.Unknown:
                     actionButton.Enabled = true;
                     actionButton.Text = "Enter Race";
-                    readyCheckBox.Enabled = true;
+                    readyCheckBox.Enabled = false;
                     readyCheckBox.Checked = false;
                     break;
                 case UserStatus.NotReady:
@@ -190,13 +192,13 @@ namespace LiveSplit.Racetime.View
                     readyCheckBox.Checked = true;
                     break;
                 case UserStatus.Finished:
+                case UserStatus.Forfeit:
                     actionButton.Enabled = true;
                     actionButton.Text = "Undone";
                     readyCheckBox.Enabled = false;
                     readyCheckBox.Checked = true;
                     break;
-                case UserStatus.Disqualified:
-                case UserStatus.Forfeit:
+                case UserStatus.Disqualified:                
                 default:
                     actionButton.Enabled = false;
                     actionButton.Text = "";
@@ -232,6 +234,7 @@ namespace LiveSplit.Racetime.View
                     Channel.SendChannelMessage(".forfeit");
                     break;
                 case UserStatus.Finished:
+                case UserStatus.Forfeit:
                     Channel.SendChannelMessage(".undone");
                     break;
             }
