@@ -8,7 +8,9 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -292,9 +294,36 @@ namespace LiveSplit.Racetime.View
 
         private void saveLogButton_Click(object sender, EventArgs e)
         {
-            string s = inputBox.Text;
-            Channel.TryCreateCommand(ref s);
-            Channel.SendChannelMessage(s);
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "Log Files (*.log)|*.*";
+            DialogResult res = sfd.ShowDialog();
+            if(res == DialogResult.OK)
+            {
+                try
+                {
+                    WebRequest wr = WebRequest.Create($"{Channel.FullWebRoot}{Channel.Race.ID}/log");
+                    using (WebResponse sp = wr.GetResponse())
+                    {
+                        StreamReader sr = new StreamReader(sp.GetResponseStream());
+                        string content = sr.ReadToEnd();
+
+                        File.WriteAllText(sfd.FileName, content);
+                    }
+                }
+                catch(UnauthorizedAccessException)
+                {
+                    MessageBox.Show("No write permissions", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch(IOException)
+                {
+                    MessageBox.Show("I/O Error. Can not write to disk", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);                
+                }
+                catch(Exception)
+                {
+                    MessageBox.Show("Could not save Logfile. Reason unknown", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            
         }
     }       
 }
