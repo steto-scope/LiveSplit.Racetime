@@ -221,11 +221,6 @@ connect:
             }
 
 
-            if (Race.Goal != msg.Race.Goal)
-            {                
-                GoalChanged?.Invoke(this, new EventArgs());
-            }         
-           
            
 
             switch(msg.Race.State)
@@ -257,7 +252,7 @@ connect:
             Race = msg.Race;
             StateChanged?.Invoke(this, Race.State);
             UserListRefreshed?.Invoke(this, new EventArgs());
-
+            GoalChanged?.Invoke(this, new EventArgs());
 
         }
 

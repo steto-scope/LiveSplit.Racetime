@@ -6,9 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -17,6 +19,7 @@ namespace LiveSplit.Racetime.View
     public partial class ChannelForm : DarkForm
     {
         public RacetimeChannel Channel { get; set; }
+        private static Regex urlPattern = new Regex(@"\b((ftp|https?):\/\/[-\w]+(\.\w[-\w]*)+|(?:[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\.)+(?: com\b|edu\b|biz\b|gov\b|in(?:t|fo)\b|mil\b|net\b|org\b|[a-z][a-z]\b))(\:\d+)?(\/[^.!,?;""'<>()\[\]{}\s\x7F-\xFF]*(?:[.!,?]+[^.!,?;""'<>()\[\]{}\s\x7F-\xFF]+)*)?", RegexOptions.Compiled| RegexOptions.IgnoreCase);
         
         private bool formClosing;
         //private int reconnectTries = 0;
@@ -46,6 +49,7 @@ namespace LiveSplit.Racetime.View
             Channel.Disconnected += Channel_Disconnected;
             Channel.RawMessageReceived += Channel_RawMessageReceived;
             Channel.RequestOutputReset += Channel_RequestOutputReset;
+            
 
             InitializeComponent();
             TopMost = alwaysOnTop;
@@ -108,7 +112,38 @@ namespace LiveSplit.Racetime.View
 
         private void Channel_GoalChanged(object sender, EventArgs e)
         {
+            goalLabel.Text = Channel.Race.Goal ?? "";
             
+            var s = Channel.Race.Info;
+            Console.WriteLine(s);
+            infoLabel.Text = s;
+            //infoLabel.Text = s;
+
+            //MatchCollection mc = urlPattern.Matches(s);
+
+
+            // int pos=0;
+
+            //l.Click += (ss, args) => { if (urlPattern.IsMatch(l.Text)) Process.Start(l.Text); };
+           // foreach (Match m in mc)
+            //{
+
+                /* {
+                     Text = s.Substring(pos, m.Index + m.Length),
+                      LinkArea = new LinkArea(m.Index,m.Length)
+                 };
+                 
+                 infoPanel.Controls.Add(l);*/
+                //l.Links.Add(m.Index, m.Length);
+            //}
+            
+
+           /* if (pos < s.Length)
+                infoPanel.Controls.Add(new Label()
+                {
+                    Text = s.Substring(pos)
+                });
+                */
         }
 
         private void Channel_UserListRefreshed(object sender, EventArgs e)
@@ -207,7 +242,7 @@ namespace LiveSplit.Racetime.View
 
         private void ChannelWindow_Load(object sender, EventArgs e)
         {
-
+            
         }
 
         private void inputBox_KeyDown(object sender, KeyEventArgs e)
