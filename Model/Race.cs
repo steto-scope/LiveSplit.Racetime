@@ -11,10 +11,10 @@ namespace LiveSplit.Racetime.Model
     {
         public static dynamic EntrantToUserConverter(dynamic e)
         {
-            
+
             return new
             {
-               id = e.user.id,
+                id = e.user.id,
                 name = e.user.name,
                 full_name = e.user.full_name,
                 flair = e.user.flair,
@@ -25,6 +25,7 @@ namespace LiveSplit.Racetime.Model
                 place = e.place,
                 place_ordinal = e.place_ordinal,
                 finish_time = e.finish_time,
+                finished_at = e.finished_at,
                 stream_live = e.stream_live,
                 comment = e.comment,
                 stream_override = e.stream_override

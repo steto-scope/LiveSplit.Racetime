@@ -107,11 +107,11 @@ namespace LiveSplit.Racetime.View
                 }
                 
                 if(!hideUsername)
-                    chatBox.AppendText(m.User == RacetimeUser.RaceBot ? "["+m.User.Name+"]" : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
+                    chatBox.AppendText(m.User == RacetimeUser.RaceBot ? "  "+m.User.Name+"  " : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
 
                 chatBox.AppendText("  ");
                 if (m.Highlight)
-                    chatBox.AppendText(m.Message, chatBox.ForeColor, Color.SlateGray, true);
+                    chatBox.AppendText(m.Message, chatBox.ForeColor, Color.Firebrick, true);
                 else
                     chatBox.AppendText(m.Message);
 
@@ -166,7 +166,7 @@ namespace LiveSplit.Racetime.View
             userlist.Clear();
             foreach(RacetimeUser u in Channel.Race.Entrants)
             {
-                userlist.AddUser(u);
+                userlist.AddUser(u,Channel.Race.StartedAt);
             }
         }
 
@@ -297,7 +297,7 @@ namespace LiveSplit.Racetime.View
 
         private void ChannelForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if(Channel.Race.State == RaceState.Started && Channel.PersonalStatus == UserStatus.Racing)
+            if(Channel.Race?.State == RaceState.Started && Channel.PersonalStatus == UserStatus.Racing)
             {
                 DialogResult r = MessageBox.Show("Do you want to FORFEIT before closing the window?", "", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
                 if(r == DialogResult.Yes)

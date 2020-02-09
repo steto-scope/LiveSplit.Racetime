@@ -21,11 +21,11 @@ namespace LiveSplit.Racetime.View
             box.SelectionLength = 0;
             
             box.SelectionColor = color;
-            if (highlight) box.SelectionBackColor = highlightcolor;
+            if (highlight) box.SelectionColor = highlightcolor;
             if (bold) box.SelectionFont = BoldFont;
             box.AppendText(text);
             if (bold) box.SelectionFont = box.Font;
-            if (highlight) box.SelectionBackColor = box.BackColor;
+            if (highlight) box.SelectionColor = box.BackColor;
             box.SelectionColor = box.ForeColor;
         }
     }

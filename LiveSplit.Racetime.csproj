@@ -49,8 +49,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controller\AuthenticatorBase.cs" />
+    <Compile Include="Controller\IAuthentificationSettings.cs" />
     <Compile Include="Controller\RacetimeChannel.cs" />
     <Compile Include="Controller\RacetimeAuthenticator.cs" />
+    <Compile Include="Controller\RTAuthentificationSettings.cs" />
     <Compile Include="Model\RTModelBase.cs" />
     <Compile Include="RacetimeAPI.cs" />
     <Compile Include="Model\MessageType.cs" />
@@ -125,6 +128,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\live_and_ready.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flag.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -18,12 +18,12 @@ namespace LiveSplit.Racetime.View
             InitializeComponent();
         }
 
-        public void AddUser(RacetimeUser u)
+        public void AddUser(RacetimeUser u, DateTime raceStartingTime)
         {
             if (u != null)
             {
                 RacerControl rc = new RacerControl();
-                rc.UpdateUser(u);
+                rc.Update(u, raceStartingTime);
                 userPanel.Controls.Add(rc);
             }
         }

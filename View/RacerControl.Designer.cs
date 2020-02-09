@@ -28,29 +28,29 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.mainLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.liveStatusImage = new System.Windows.Forms.PictureBox();
             this.placementLabel = new System.Windows.Forms.Label();
             this.roleImage = new System.Windows.Forms.PictureBox();
             this.usernameLabel = new System.Windows.Forms.Label();
             this.timeLabel = new System.Windows.Forms.Label();
-            this.flowLayoutPanel1.SuspendLayout();
+            this.mainLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.liveStatusImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.roleImage)).BeginInit();
             this.SuspendLayout();
             // 
-            // flowLayoutPanel1
+            // mainLayoutPanel
             // 
-            this.flowLayoutPanel1.Controls.Add(this.liveStatusImage);
-            this.flowLayoutPanel1.Controls.Add(this.placementLabel);
-            this.flowLayoutPanel1.Controls.Add(this.roleImage);
-            this.flowLayoutPanel1.Controls.Add(this.usernameLabel);
-            this.flowLayoutPanel1.Controls.Add(this.timeLabel);
-            this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(280, 16);
-            this.flowLayoutPanel1.TabIndex = 0;
+            this.mainLayoutPanel.Controls.Add(this.liveStatusImage);
+            this.mainLayoutPanel.Controls.Add(this.placementLabel);
+            this.mainLayoutPanel.Controls.Add(this.roleImage);
+            this.mainLayoutPanel.Controls.Add(this.usernameLabel);
+            this.mainLayoutPanel.Controls.Add(this.timeLabel);
+            this.mainLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.mainLayoutPanel.Location = new System.Drawing.Point(0, 0);
+            this.mainLayoutPanel.Name = "mainLayoutPanel";
+            this.mainLayoutPanel.Size = new System.Drawing.Size(280, 16);
+            this.mainLayoutPanel.TabIndex = 0;
             // 
             // liveStatusImage
             // 
@@ -108,13 +108,13 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.flowLayoutPanel1);
+            this.Controls.Add(this.mainLayoutPanel);
             this.ForeColor = System.Drawing.Color.White;
             this.Margin = new System.Windows.Forms.Padding(0);
             this.Name = "RacerControl";
             this.Size = new System.Drawing.Size(280, 16);
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
+            this.mainLayoutPanel.ResumeLayout(false);
+            this.mainLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.liveStatusImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.roleImage)).EndInit();
             this.ResumeLayout(false);
@@ -123,7 +123,7 @@
 
         #endregion
 
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.FlowLayoutPanel mainLayoutPanel;
         private System.Windows.Forms.PictureBox liveStatusImage;
         private System.Windows.Forms.Label usernameLabel;
         private System.Windows.Forms.Label placementLabel;

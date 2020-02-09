@@ -84,24 +84,36 @@ namespace LiveSplit.Racetime.Model
                     case "done": s = UserStatus.Finished; break;
                     case "in_progress": s = UserStatus.Racing; break;
                     case "dnf": s = UserStatus.Forfeit; break;
+                    case "dq": s = UserStatus.Disqualified; break;
                     default:s = UserStatus.Unknown; break;
                 }
                 return s;
             }
         }
-        
-        public TimeSpan FinishTime
+
+        public DateTime FinishedAt
         {
             get
             {
                 try
                 {
-                    return TimeSpan.Parse(Data.finish_time);
+                    DateTime dt;
+                    if(DateTime.TryParse(Data.finished_at, out dt))
+                        return dt;
+                    return DateTime.MaxValue;
                 }
-                catch
+                catch(Exception ex)
                 {
-                    return TimeSpan.Zero;
+                    Console.WriteLine(ex.Message);
+                    return DateTime.MaxValue;
                 }
+            }
+        }
+        public bool HasFinished
+        {
+            get
+            {
+                return FinishedAt != DateTime.MaxValue;
             }
         }
         public int Place

@@ -1,4 +1,5 @@
 ﻿using LiveSplit.Options;
+using LiveSplit.Racetime.Controller;
 using LiveSplit.Racetime.Model;
 using LiveSplit.Web;
 using LiveSplit.Web.SRL;
@@ -46,7 +47,14 @@ namespace LiveSplit.Racetime
             }
         }
 
-        public IEnumerable<Race> RacesList { get; set; }
+        public RacetimeAPI()
+        {
+            Authenticator = new RacetimeAuthenticator(new RTAuthentificationSettings());
+        }
+
+        public IEnumerable<Race> Races { get; set; }
+
+        public AuthenticatorBase Authenticator { get; set; }
 
 
         protected Uri GetUri(string subUri)
@@ -61,7 +69,7 @@ namespace LiveSplit.Racetime
 
         protected void RefreshRacesList()
         {
-            RacesList = GetRaces().ToArray();
+            Races = GetRaces().ToArray();
             RacetimeRacesRefreshed?.Invoke(null, new EventArgs());
         }
 

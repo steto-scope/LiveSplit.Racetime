@@ -61,10 +61,11 @@ namespace LiveSplit.Racetime.Controller
 
         public RacetimeChannel(LiveSplitState state, ITimerModel model)
         {
+            Authenticator = new RacetimeAuthenticator(new RTAuthentificationSettings());
             reconnect_cts = new CancellationTokenSource();
             RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 3), reconnect_cts.Token);
 
-            Authenticator = new RacetimeAuthenticator();
+           
             this.Model = model;
             
             state.OnSplit += State_OnSplit;
@@ -120,18 +121,17 @@ namespace LiveSplit.Racetime.Controller
                 goto connect;
 
 
-            if(await Authenticator.Authorize() && await Authenticator.RequestAccessToken() && Authenticator.AccessToken != null)
+            if(await Authenticator.Authorize())
             {
-                Authenticator.RequestUserInfo();
-                SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
-                
+                Console.WriteLine(Authenticator.Identity);
+                SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");                
             }
             else
             {
+                SendSystemMessage(Authenticator.Error, true);
                 AuthenticationFailed?.Invoke(this, new EventArgs());
                 return;
             }
-            Authenticator.Finalize();
 
 connect:
             //opening the socket
@@ -268,7 +268,7 @@ connect:
                     break;
                 case UserStatus.Finished:                    
                     Model.Split();
-                    Model.CurrentState.Run.Offset = newIdentity.FinishTime;
+                    Model.CurrentState.Run.Offset = Race.StartedAt - newIdentity.FinishedAt;
                     break;
                 case UserStatus.Forfeit:
                     Model.Reset();
