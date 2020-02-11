@@ -282,6 +282,7 @@
             this.hideChatCheckBox.TabIndex = 1;
             this.hideChatCheckBox.Text = "Hide Mid-race Chat";
             this.hideMidraceChatToolTip.SetToolTip(this.hideChatCheckBox, "Hides everything besides  messages of priviledged users and RaceBot ");
+            this.hideChatCheckBox.Visible = false;
             // 
             // forceReloadButton
             // 

@@ -21,6 +21,7 @@ namespace LiveSplit.Racetime.View
     public partial class ChannelForm : DarkForm
     {
         public RacetimeChannel Channel { get; set; }
+        public string ChannelID { get; set; }
         private static Regex urlPattern = new Regex(@"\b((ftp|https?):\/\/[-\w]+(\.\w[-\w]*)+|(?:[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\.)+(?: com\b|edu\b|biz\b|gov\b|in(?:t|fo)\b|mil\b|net\b|org\b|[a-z][a-z]\b))(\:\d+)?(\/[^.!,?;""'<>()\[\]{}\s\x7F-\xFF]*(?:[.!,?]+[^.!,?;""'<>()\[\]{}\s\x7F-\xFF]+)*)?", RegexOptions.Compiled| RegexOptions.IgnoreCase);
         
         private bool formClosing;
@@ -43,23 +44,35 @@ namespace LiveSplit.Racetime.View
 
         public ChannelForm(RacetimeChannel channel, string channelId, bool alwaysOnTop = true)
         {
+            ChannelID = channelId;
             Channel = channel;
             Channel.ChannelJoined += Channel_ChannelJoined;
             Channel.StateChanged += Channel_StateChanged;
             Channel.UserListRefreshed += Channel_UserListRefreshed;
             Channel.GoalChanged += Channel_GoalChanged;
             Channel.MessageReceived += Channel_ChatUpdate;
-            Channel.Disconnected += Channel_Disconnected;
             Channel.RawMessageReceived += Channel_RawMessageReceived;
             Channel.RequestOutputReset += Channel_RequestOutputReset;
+            Channel.Disconnected += Channel_Disconnected;
             
 
             InitializeComponent();
             TopMost = alwaysOnTop;
             Show();
             Text = channelId.Substring(channelId.IndexOf('/')+1);
+            SetInitialState();
+            actionButton.Enabled = false;
             Channel.Connect(channelId);
             infoLabel.LinkClicked += (ss, args) => { if (urlPattern.IsMatch(infoLabel.Text)) Process.Start(infoLabel.Text.Substring(args.Link.Start,args.Link.Length)); };
+        }
+
+        private void Channel_Disconnected(object sender, EventArgs e)
+        {
+            if(!IsDisposed)
+            {
+                SetInitialState();
+                forceReloadButton.Enabled = false;
+            }
         }
 
         private void Channel_RequestOutputReset(object sender, EventArgs e)
@@ -72,23 +85,18 @@ namespace LiveSplit.Racetime.View
             Console.WriteLine(value);
         }
 
-        private  async void Channel_Disconnected(object sender, EventArgs e)
-        {
-            
-        }
-
         private void Channel_ChatUpdate(object sender, IEnumerable<ChatMessage> chatMessages)
         {
             if (formClosing)
-                return;
-
-            
+                return;            
 
             foreach(ChatMessage m in chatMessages)
             {
                 if (m.Type == MessageType.Race)
                     continue;
-                if (hideFinishesCheckBox.Checked && m is RaceBotMessage && ((RaceBotMessage)m).IsFinishingMessage)
+                if (Channel.Race?.State == RaceState.Started && hideFinishesCheckBox.Checked && m is RaceBotMessage && ((RaceBotMessage)m).IsFinishingMessage)
+                    continue;
+                if (Channel.Race?.State == RaceState.Started && hideChatCheckBox.Checked && ((m.User.Role & (UserRole.ChannelCreator|UserRole.Monitor|UserRole.Bot|UserRole.Staff|UserRole.System))==0))
                     continue;
 
                 chatBox.AppendText("\n");
@@ -133,34 +141,18 @@ namespace LiveSplit.Racetime.View
             MatchCollection mc = urlPattern.Matches(s);
 
 
-            // int pos=0;
-
-            //
             infoLabel.Links.Clear();
             foreach (Match m in mc)
             {
 
-                /* {
-                     Text = s.Substring(pos, m.Index + m.Length),
-                      LinkArea = new LinkArea(m.Index,m.Length)
-                 };
-                 
-                 infoPanel.Controls.Add(l);*/
                 infoLabel.Links.Add(m.Index, m.Length);
             }
             
-
-           /* if (pos < s.Length)
-                infoPanel.Controls.Add(new Label()
-                {
-                    Text = s.Substring(pos)
-                });
-                */
         }
 
         private void Channel_UserListRefreshed(object sender, EventArgs e)
         {
-            if (hideFinishesCheckBox.Checked)
+            if ((hideFinishesCheckBox.Checked || hideChatCheckBox.Checked) && Channel.PersonalStatus== UserStatus.Racing)
                 return;
 
             userlist.Clear();
@@ -168,6 +160,16 @@ namespace LiveSplit.Racetime.View
             {
                 userlist.AddUser(u,Channel.Race.StartedAt);
             }
+        }
+
+        private void SetInitialState()
+        {
+            actionButton.Enabled = false;
+            actionButton.Text = "(Re)Connect";
+            readyCheckBox.Enabled = false;
+            readyCheckBox.Checked = false;
+            forceReloadButton.Enabled = false;
+            saveLogButton.Enabled = false;
         }
 
         private void Channel_StateChanged(object sender, RaceState value)
@@ -183,44 +185,70 @@ namespace LiveSplit.Racetime.View
                     actionButton.Text = "Enter Race";
                     readyCheckBox.Enabled = false;
                     readyCheckBox.Checked = false;
+                    forceReloadButton.Enabled = false;
+                    saveLogButton.Enabled = false;
                     break;
                 case UserStatus.NotReady:
                     actionButton.Enabled = true;
                     actionButton.Text = "Quit Race";
                     readyCheckBox.Enabled = true;
                     readyCheckBox.Checked = false;
+                    forceReloadButton.Enabled = true;
+                    saveLogButton.Enabled = true;
                     break;
                 case UserStatus.Ready:
                     actionButton.Enabled = true;
                     actionButton.Text = "Quit Race";
                     readyCheckBox.Enabled = true;
                     readyCheckBox.Checked = true;
+                    forceReloadButton.Enabled = true;
+                    saveLogButton.Enabled = true;
                     break;
                 case UserStatus.Racing:
                     actionButton.Enabled = true;
                     actionButton.Text = "Forfeit Race";
                     readyCheckBox.Enabled = false;
                     readyCheckBox.Checked = true;
+                    forceReloadButton.Enabled = true;
+                    saveLogButton.Enabled = true;
                     break;
                 case UserStatus.Finished:
                 case UserStatus.Forfeit:
+                    if(hideFinishesCheckBox.Checked)
+                    {
+                        Channel_UserListRefreshed(sender,null);
+                    }
                     actionButton.Enabled = true;
                     actionButton.Text = "Undone";
                     readyCheckBox.Enabled = false;
                     readyCheckBox.Checked = true;
+                    forceReloadButton.Enabled = true;
+                    saveLogButton.Enabled = true;
                     break;
-                case UserStatus.Disqualified:                
+                case UserStatus.Disqualified:
+                    actionButton.Enabled = false;
+                    if (hideFinishesCheckBox.Checked)
+                    {
+                        Channel_UserListRefreshed(sender, null);
+                    }
+
+                    forceReloadButton.Enabled = false;
+                    saveLogButton.Enabled = true;
+                    break;
                 default:
                     actionButton.Enabled = false;
                     actionButton.Text = "";
                     readyCheckBox.Enabled = false;
                     readyCheckBox.Checked = false;
+                    forceReloadButton.Enabled = false;
+                    saveLogButton.Enabled = false;
                     break;
             }
             readyCheckBox.CheckedChanged += readyCheckBox_CheckedChanged;
-
-            inputBox.Enabled = !(!Channel.Race.AllowNonEntrantChat && Channel.PersonalStatus == UserStatus.NotInRace) &&
-                                !(Channel.Race.State == RaceState.Started && !Channel.Race.AllowMidraceChat);
+            
+            inputBox.Enabled = (!(!Channel.Race.AllowNonEntrantChat && Channel.PersonalStatus == UserStatus.NotInRace) &&
+                                !(Channel.Race.State == RaceState.Started && !Channel.Race.AllowMidraceChat)) || 
+                                !(Channel.PersonalStatus == UserStatus.Disqualified);
 
 
         }
@@ -229,6 +257,11 @@ namespace LiveSplit.Racetime.View
         {
             DialogResult r = DialogResult.None;
             actionButton.Enabled = false;
+            if(!Channel.IsConnected)
+            {
+                Channel.Connect(ChannelID);
+                return;
+            }
             switch(Channel.PersonalStatus)
             {
                 default:
@@ -316,7 +349,6 @@ namespace LiveSplit.Racetime.View
             Channel.UserListRefreshed -= Channel_UserListRefreshed;
             Channel.GoalChanged -= Channel_GoalChanged;
             Channel.MessageReceived -= Channel_ChatUpdate;
-            Channel.Disconnected -= Channel_Disconnected;
 
             Channel.Disconnect();
         }

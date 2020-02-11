@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
@@ -30,6 +31,8 @@ namespace LiveSplit.Racetime.Controller
         public const string restProto = "http";
         public const string wsProto = "ws";
         public const string serverDomain = "192.168.178.70";
+        public const int bufferSize = 20480;
+        public const int maxBufferSize = 2097152;
         public const int serverPort = 8000;
 
         public string FullWebRoot => string.Format("{0}://{1}:{2}/", restProto, serverDomain, serverPort);
@@ -53,6 +56,7 @@ namespace LiveSplit.Racetime.Controller
         private ClientWebSocket ws;
         protected List<ChatMessage> log = new List<ChatMessage>();
         public bool ConnectionError { get; set; }
+        public bool IsConnected { get; set; }
         
 
 
@@ -63,7 +67,7 @@ namespace LiveSplit.Racetime.Controller
         {
             Authenticator = new RacetimeAuthenticator(new RTAuthentificationSettings());
             reconnect_cts = new CancellationTokenSource();
-            RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 3), reconnect_cts.Token);
+            RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 10), reconnect_cts.Token);
 
            
             this.Model = model;
@@ -81,16 +85,49 @@ namespace LiveSplit.Racetime.Controller
 
         private async Task<bool> ReceiveAndProcess()
         {
-            ArraySegment<byte> bytesReceived = new ArraySegment<byte>(new byte[1024 * 100]);
+            WebSocketReceiveResult result;
             string msg = "";
-            try
-            {
-                WebSocketReceiveResult result = await ws.ReceiveAsync(bytesReceived, websocket_cts.Token);
-                if (result == null)
-                    return false;
+            byte[] buf = new byte[bufferSize];
 
-                msg = Encoding.UTF8.GetString(bytesReceived.Array, 0, result.Count);
+            try
+            {                
+                int maxBufferSize = RacetimeChannel.maxBufferSize;
+                int read = 0;
+                int free = buf.Length;
+                
+
+                do
+                {
+                    if (free < 1)
+                    {
+                        var newSize = buf.Length + (bufferSize);
+                        if (newSize > maxBufferSize)
+                        {
+                            throw new InternalBufferOverflowException();
+                        }
+                        var newBuf = new byte[newSize];
+                        Array.Copy(buf, 0, newBuf, 0, read);
+                        buf = newBuf;
+                        free = buf.Length - read;
+                    }
+                    result = await ws.ReceiveAsync(new ArraySegment<byte>(buf, read, free), websocket_cts.Token);
+                    read += result.Count;
+                    free -= result.Count;
+                }
+                while (!result.EndOfMessage);
+                
+
+                msg = Encoding.UTF8.GetString(buf, 0, read);
                 RawMessageReceived?.Invoke(this, msg);
+            }
+            catch(InternalBufferOverflowException)
+            {
+                //flush socket
+                while (!(result = await ws.ReceiveAsync(new ArraySegment<byte>(buf, 0, buf.Length), websocket_cts.Token)).EndOfMessage)
+                    ;
+
+                SendSystemMessage("Content too large to load");
+                return false;
             }
             catch
             {
@@ -113,109 +150,145 @@ namespace LiveSplit.Racetime.Controller
 
         public async Task RunAsync(string id)
         {
-            websocket_cts = new CancellationTokenSource();
-            ws = new ClientWebSocket();
-
-            //authorize user
-            if (Authenticator.AccessToken != null)
-                goto connect;
-
-
-            if(await Authenticator.Authorize())
+            if(IsConnected)
             {
-                Console.WriteLine(Authenticator.Identity);
-                SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");                
-            }
-            else
-            {
-                SendSystemMessage(Authenticator.Error, true);
-                AuthenticationFailed?.Invoke(this, new EventArgs());
+                SendSystemMessage("WebSocket is already open");
                 return;
             }
-
-connect:
-            //opening the socket
-            ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
-            try
-            {
-                await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/o/race/" + id), websocket_cts.Token);
-            }
-            catch(WebSocketException wex)
-            {
-                Console.WriteLine(wex.Message);
-                Console.WriteLine(wex.InnerException.Message);
-                Console.WriteLine(wex.StackTrace);
-                //SendSystemMessage(wex.Message);
-            }
-
-            //initial command to sync LiveSplit 
-            if (ws.State == WebSocketState.Open)
-            {
-                ConnectionError = false;
-                ChannelJoined?.Invoke(this, new EventArgs());
-                SendSystemMessage($"Joined Channel '{id}'");
-                ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"getrace\" }"));
-                ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
-                await ReceiveAndProcess();
-                SendSystemMessage("Loading chat history...");
-                ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
-                ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
-                await ReceiveAndProcess();
-            }
-
-            while (ws.State == WebSocketState.Open && !websocket_cts.IsCancellationRequested)
-            {
-
-                try
-                {
-                    /* Console.Write("Input message ('exit' to exit): ");
-                    string msg = Console.ReadLine();
-                    if (msg == "exit")
-                    {
-                        break;
-                    }*/
-                    //ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(msg));
-                    //await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
-                    await ReceiveAndProcess();
-
-                }
-                catch(Exception ex)
-                {
-                    //Console.WriteLine(ex.InnerException.Message);
-                }
-            }
+            websocket_cts = new CancellationTokenSource();
             
 
-            switch (ws.State)
+            using (ws = new ClientWebSocket())
             {
-                case WebSocketState.CloseReceived:
-                    SendSystemMessage("Disconnect");
-                    ConnectionError = false;
-                    Disconnected?.Invoke(this, new EventArgs());
-                    break;
-                default:
-                case WebSocketState.Aborted:
-                    SendSystemMessage("Connection lost");
-                    SendSystemMessage("Reconnecting...");
-                    ConnectionError = true;
+                IsConnected = true;
 
-                    break;
-                case WebSocketState.Closed:
-                    SendSystemMessage("Connection closed");
-                    SendSystemMessage("Reconnecting...");
-                    ConnectionError = true;
+                //authorize user if needed
+                if (Authenticator.AccessToken == null)
+                {
+                    if (await Authenticator.Authorize())
+                    {
+                        Console.WriteLine(Authenticator.Identity);
+                        SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
+                    }
+                    else
+                    {
+                        SendSystemMessage(Authenticator.Error, true);
+                        AuthenticationFailed?.Invoke(this, new EventArgs());
+                        goto cleanup;
+                    }
+                }
+                //opening the socket
+                ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
+                try
+                {
+                    await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/o/race/" + id), websocket_cts.Token);
+                }
+                catch (WebSocketException wex)
+                {
+                    Console.WriteLine(wex.Message);
+                    Console.WriteLine(wex.InnerException.Message);
+                    Console.WriteLine(wex.StackTrace);
+                    //SendSystemMessage(wex.Message);
+                    goto cleanup;
+                }
 
-                    break;
+                //initial command to sync LiveSplit 
+                if (ws.State == WebSocketState.Open)
+                {
+                    
+                    ChannelJoined?.Invoke(this, new EventArgs());
+                    SendSystemMessage($"Joined Channel '{id}'");
+                    try
+                    {                        
+                        ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"getrace\" }"));
+                        ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
+                        await ReceiveAndProcess();
+                    }
+                    catch
+                    {
+                        SendSystemMessage("Unable to obtain Race information. Try reloading");
+                        goto cleanup;
+                    }
+                    try
+                    {
+                        if (!ConnectionError) //don't load after every reconnect
+                        {
+                            SendSystemMessage("Loading chat history...");
+                            ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
+                            ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
+                            await ReceiveAndProcess();
+                        }
+                    }
+                    catch
+                    {
+                        SendSystemMessage("Unable to load chat history");
+                    }
+                }
+
+                ConnectionError = false;
+
+                while (ws.State == WebSocketState.Open && !websocket_cts.IsCancellationRequested)
+                {
+
+                    try
+                    {
+                        /* Console.Write("Input message ('exit' to exit): ");
+                        string msg = Console.ReadLine();
+                        if (msg == "exit")
+                        {
+                            break;
+                        }*/
+                        //ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(msg));
+                        //await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
+                        await ReceiveAndProcess();
+
+                    }
+                    catch (Exception ex)
+                    {
+                        //Console.WriteLine(ex.InnerException.Message);
+                    }
+                }
+
+
+                switch (ws.State)
+                {
+                    case WebSocketState.CloseSent:
+                    case WebSocketState.CloseReceived:
+                    case WebSocketState.Closed:
+                        ConnectionError = false;                       
+                        break;
+                    default:
+                    case WebSocketState.Aborted:
+                        ConnectionError = true;
+
+                        break;
+                    /*
+                        SendSystemMessage("Connection closed");
+                        SendSystemMessage("Reconnecting...");
+                        ConnectionError = true;
+
+                        break;*/
+                }
             }
 
+cleanup:
+            SendSystemMessage("Disconnect");
+            if(ConnectionError)
+                 SendSystemMessage("Reconnecting...");
+            websocket_cts.Dispose();
+            IsConnected = false;
+            Disconnected?.Invoke(this, new EventArgs());            
 
         }
 
         public async void ForceReload()
-        {
-            ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
-            ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
-            await ReceiveAndProcess();
+        {            
+            if(IsConnected)
+            {
+                ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
+                ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
+                await ReceiveAndProcess();
+            }            
         }
 
         
@@ -240,8 +313,8 @@ connect:
                 {
                     case Racetime.Model.RaceState.Starting:
                         Model.CurrentState.SetGameTime(TimeSpan.Zero);
-                        Model.CurrentState.Run.Offset = new TimeSpan(0,0,-10);//msg.Race.StartDelay;
-                        Console.WriteLine(msg.Race.StartDelay);
+                        Model.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;// - msg.Race.StartDelay;//-msg.Race.StartDelay;// new TimeSpan(0,0,-10);//msg.Race.StartDelay;
+                        Console.WriteLine("Start Delay: {0}, Date: {1}, Posted: {2}", msg.Race.StartDelay, msg.Race.StartedAt, msg.Posted);
                         Model.Start();
                         break;
                     /*case Racetime.Model.RaceState.Started:
@@ -259,7 +332,8 @@ connect:
             switch(newIdentity?.Status)
             {
                 case UserStatus.Racing:
-                    Model.CurrentState.Run.Offset = DateTime.Now - msg.Race.StartedAt;
+                    Model.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
+                    
                     Model.UndoSplit();
                     Model.Start();
                     break;
@@ -268,7 +342,7 @@ connect:
                     break;
                 case UserStatus.Finished:                    
                     Model.Split();
-                    Model.CurrentState.Run.Offset = Race.StartedAt - newIdentity.FinishedAt;
+                    Model.CurrentState.Run.Offset = newIdentity.FinishedAt - msg.Race.StartedAt;
                     break;
                 case UserStatus.Forfeit:
                     Model.Reset();
@@ -326,12 +400,15 @@ connect:
 
         private void State_OnUndoSplit(object sender, EventArgs e)
         {
-            
+            //todo: dosent work yet
+            if (Model.CurrentState.CurrentSplitIndex >= Model.CurrentState.Run.Count) 
+                SendChannelMessage(".undone");
         }
 
         private void State_OnSplit(object sender, EventArgs e)
         {
-            SendChannelMessage(".done");
+            if(Model.CurrentState.CurrentSplitIndex >= Model.CurrentState.Run.Count)
+                SendChannelMessage(".done");
         }
 
         public event EventHandler ChannelJoined;
@@ -355,11 +432,9 @@ connect:
 
         public void Disconnect()
         {
-           
-            websocket_cts.Cancel();
+           if(IsConnected)
+                websocket_cts.Cancel();
             reconnect_cts.Cancel();
-            ws.Dispose();
-            Console.WriteLine("Disconnect");
         }
 
         public void Forfeit()
@@ -394,7 +469,7 @@ connect:
             string data = TryCreateCommand(ref message) ? message : "{ \"action\": \"message\", \"data\": { \"message\":\"" + message + "\", \"guid\":\"" + Guid.NewGuid().ToString() + "\" } }";
             ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(data));
 
-            if (ws.State == WebSocketState.Open)
+            if (IsConnected)
             {               
                 await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, websocket_cts.Token);
             }
@@ -402,7 +477,9 @@ connect:
 
         public void SendSystemMessage(string message, bool important = false)
         {
-            MessageReceived?.Invoke(this,  new ChatMessage[] { LiveSplitMessage.Create(message, important) });
+            var msg = new ChatMessage[] { LiveSplitMessage.Create(message, important) };
+            MessageReceived?.Invoke(this, msg );
+            RawMessageReceived?.Invoke(this, msg.First().Posted.ToString());
         }
 
         public void Ready() => SendChannelMessage(".ready");

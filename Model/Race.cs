@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace LiveSplit.Racetime.Model
 {
@@ -26,6 +27,7 @@ namespace LiveSplit.Racetime.Model
                 place_ordinal = e.place_ordinal,
                 finish_time = e.finish_time,
                 finished_at = e.finished_at,
+                start_delay = e.start_delay,
                 stream_live = e.stream_live,
                 comment = e.comment,
                 stream_override = e.stream_override
@@ -107,8 +109,8 @@ namespace LiveSplit.Racetime.Model
             {
                 try
                 {
-                    Console.WriteLine(TimeSpan.Parse(Data.start_delay));
-                    return TimeSpan.Parse(Data.start_delay);
+                    TimeSpan ts = XmlConvert.ToTimeSpan(Data.start_delay);
+                    return ts;
                 }
                 catch
                 {
@@ -162,7 +164,7 @@ namespace LiveSplit.Racetime.Model
                 {
                     if (Data.started_at == null)
                         return DateTime.MaxValue;
-                    return DateTime.Parse(Data.started_at);
+                    return DateTime.Parse(Data.started_at).ToUniversalTime();
                 }
                 catch
                 {

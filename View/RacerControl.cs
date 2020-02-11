@@ -62,9 +62,9 @@ namespace LiveSplit.Racetime.View
 
             //Console.WriteLine(user.FinishTime);
             var finishtime = user.FinishedAt - raceStartingTime;
-            Console.WriteLine(user.FinishedAt);
+            /*Console.WriteLine(user.FinishedAt);
             Console.WriteLine(raceStartingTime);
-            Console.WriteLine(finishtime);
+            Console.WriteLine(finishtime);*/
             timeLabel.Text = (user.HasFinished) ? string.Format(string.Format("{0:hh\\:mm\\:ss}", finishtime)) : "";
 
         }

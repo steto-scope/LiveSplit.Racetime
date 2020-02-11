@@ -145,7 +145,8 @@ reauthenticate:
 
                 await SendRedirectAsync(serverConnection, s.SuccessEndpoint);
             }
-
+            localEndpoint.Stop();
+            localEndpoint = null;
 
 
             //Step 2: Getting authorized     
@@ -191,6 +192,11 @@ reauthenticate:
 
 
 failure:
+            if(localEndpoint !=null)
+            {
+                localEndpoint.Stop();
+                localEndpoint = null;
+            }
             Reset();
             return false;
         }

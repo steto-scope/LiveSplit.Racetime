@@ -40,11 +40,14 @@ namespace LiveSplit.Racetime.Model
                 try
                 {
                     if (Data.posted_at == null)
-                        return DateTime.MaxValue;
+                        return Received;
                     return DateTime.Parse(Data.posted_at);
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine(Data.posted_at);
+
                     return DateTime.MaxValue;
                 }
             }
@@ -102,7 +105,7 @@ namespace LiveSplit.Racetime.Model
             {
                 message = msg,
                 user = RacetimeUser.LiveSplit,
-                posted_at = DateTime.Now,
+                posted_at = DateTime.Now.ToString(),
                 highlight = important,
                 is_system = true                   
             };

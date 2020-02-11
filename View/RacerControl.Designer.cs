@@ -66,18 +66,17 @@
             // placementLabel
             // 
             this.placementLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.placementLabel.AutoSize = true;
             this.placementLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.placementLabel.Location = new System.Drawing.Point(16, 1);
             this.placementLabel.Margin = new System.Windows.Forms.Padding(0);
             this.placementLabel.Name = "placementLabel";
-            this.placementLabel.Size = new System.Drawing.Size(24, 13);
+            this.placementLabel.Size = new System.Drawing.Size(28, 13);
             this.placementLabel.TabIndex = 2;
             this.placementLabel.Text = "1st";
             // 
             // roleImage
             // 
-            this.roleImage.Location = new System.Drawing.Point(40, 0);
+            this.roleImage.Location = new System.Drawing.Point(44, 0);
             this.roleImage.Margin = new System.Windows.Forms.Padding(0);
             this.roleImage.Name = "roleImage";
             this.roleImage.Size = new System.Drawing.Size(16, 16);
@@ -88,7 +87,7 @@
             // usernameLabel
             // 
             this.usernameLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.usernameLabel.Location = new System.Drawing.Point(56, 1);
+            this.usernameLabel.Location = new System.Drawing.Point(60, 1);
             this.usernameLabel.Margin = new System.Windows.Forms.Padding(0);
             this.usernameLabel.Name = "usernameLabel";
             this.usernameLabel.Size = new System.Drawing.Size(100, 13);
@@ -99,7 +98,7 @@
             // 
             this.timeLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.timeLabel.AutoSize = true;
-            this.timeLabel.Location = new System.Drawing.Point(159, 1);
+            this.timeLabel.Location = new System.Drawing.Point(163, 1);
             this.timeLabel.Name = "timeLabel";
             this.timeLabel.Size = new System.Drawing.Size(0, 13);
             this.timeLabel.TabIndex = 4;
