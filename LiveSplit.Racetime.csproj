@@ -83,7 +83,6 @@
       <DependentUpon>RacerControl.cs</DependentUpon>
     </Compile>
     <Compile Include="View\RichTextBoxExtensions.cs" />
-    <Compile Include="View\UIState.cs" />
     <Compile Include="View\UserListControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -1,7 +1,9 @@
 ﻿using DarkUI.Forms;
+using LiveSplit.Options;
 using LiveSplit.Racetime.Controller;
 using LiveSplit.Racetime.Model;
 using LiveSplit.Web;
+using LiveSplit.Web.Share;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -57,6 +59,7 @@ namespace LiveSplit.Racetime.View
             
 
             InitializeComponent();
+            DownloadAllEmotes();
             TopMost = alwaysOnTop;
             Show();
             Text = channelId.Substring(channelId.IndexOf('/')+1);
@@ -64,6 +67,29 @@ namespace LiveSplit.Racetime.View
             actionButton.Enabled = false;
             Channel.Connect(channelId);
             infoLabel.LinkClicked += (ss, args) => { if (urlPattern.IsMatch(infoLabel.Text)) Process.Start(infoLabel.Text.Substring(args.Link.Start,args.Link.Length)); };
+        }
+
+        protected void DownloadAllEmotes()
+        {
+            Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    this.InvokeIfRequired(TwitchEmoteResolver.DownloadTwitchEmotesList);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex);
+                }
+            });
+        }
+
+        public void InvokeIfRequired(Action action)
+        {
+            if (InvokeRequired)
+                Invoke(action);
+            else
+                action();
         }
 
         private void Channel_Disconnected(object sender, EventArgs e)
@@ -118,10 +144,40 @@ namespace LiveSplit.Racetime.View
                     chatBox.AppendText(m.User == RacetimeUser.RaceBot ? "  "+m.User.Name+"  " : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
 
                 chatBox.AppendText("  ");
-                if (m.Highlight)
-                    chatBox.AppendText(m.Message, chatBox.ForeColor, Color.Firebrick, true);
-                else
-                    chatBox.AppendText(m.Message);
+
+                string[] words = m.Message.Split(' ');
+                bool firstWord = true;
+
+                if(m.Highlight)
+                {
+                    chatBox.SelectionColor = Color.SeaGreen;
+                }
+
+                foreach(var word in words)
+                {
+                    if (TwitchEmoteResolver.IsEmote(word))
+                    {
+                        chatBox.AppendText((firstWord ? "" : " "));
+                        var image = TwitchEmoteResolver.Resolve(word);
+                        var whiteImage = new Bitmap(image.Width, image.Height);
+                        var g = Graphics.FromImage(whiteImage);
+                        g.FillRectangle(Brushes.White, 0, 0, image.Width, image.Height);
+                        g.DrawImage(image, 0, 0, image.Width, image.Height);
+                        Clipboard.SetDataObject(whiteImage);
+                        chatBox.ReadOnly = false;
+                        chatBox.Paste();
+                        chatBox.ReadOnly = true;
+                    }
+                    else
+                        chatBox.AppendText((firstWord ? "" : " ")+word);
+
+                    firstWord = false;
+                }
+
+                if(m.Highlight)
+                {
+                    chatBox.SelectionColor = chatBox.ForeColor;
+                }
 
                 chatBox.SelectionStart = chatBox.Text.Length;
                 chatBox.ScrollToCaret();
