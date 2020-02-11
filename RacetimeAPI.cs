@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UpdateManager;
 
 /*
  
@@ -30,7 +31,7 @@ using System.Threading.Tasks;
 
 namespace LiveSplit.Racetime
 {
-    public class RacetimeAPI
+    public class RacetimeAPI : IUpdateable
     {
         protected static readonly Uri BaseUri = new Uri("http://192.168.178.70:8000/");
         protected static string racesEndpoint => "races/data";
@@ -56,6 +57,13 @@ namespace LiveSplit.Racetime
 
         public AuthenticatorBase Authenticator { get; set; }
 
+        public string UpdateName => "Racetime Integration";
+
+        public string XMLURL => throw new NotImplementedException();
+
+        public string UpdateURL => throw new NotImplementedException();
+
+        public Version Version => new Version(0, 7);
 
         protected Uri GetUri(string subUri)
         {

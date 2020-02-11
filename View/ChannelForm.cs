@@ -37,12 +37,22 @@ namespace LiveSplit.Racetime.View
 
         private static readonly Color[] ColorList = new Color[]
         {
-            Color.FromArgb(255,179,186),
-            Color.FromArgb(255,223,186),
-            Color.FromArgb(255,255,186),
-            Color.FromArgb(186,255,201),
-            Color.FromArgb(186,225,255)
-        };
+            Color.FromArgb(219,160,170),
+            Color.FromArgb(229,161,204),
+            Color.FromArgb(221,161,229),
+            Color.FromArgb(201,161,229),
+            Color.FromArgb(172,161,229),
+            Color.FromArgb(161,177,229),
+            Color.FromArgb(161,196,229),
+            Color.FromArgb(161,221,229),
+            Color.FromArgb(161,229,206),
+            Color.FromArgb(161,229,172),
+            Color.FromArgb(183,229,161),
+            Color.FromArgb(204,229,161),
+            Color.FromArgb(227,229,161),
+            Color.FromArgb(229,204,161),
+            Color.FromArgb(229,183,161)
+        }; 
 
         public ChannelForm(RacetimeChannel channel, string channelId, bool alwaysOnTop = true)
         {
@@ -98,6 +108,7 @@ namespace LiveSplit.Racetime.View
             {
                 SetInitialState();
                 forceReloadButton.Enabled = false;
+                actionButton.Enabled = true;
             }
         }
 
@@ -134,7 +145,7 @@ namespace LiveSplit.Racetime.View
                 bool hideUsername = m.User == null || m.User == RacetimeUser.LiveSplit || (m.User == RacetimeUser.RaceBot && !m.IsSystem);
 
                 if (m.User == RacetimeUser.RaceBot)
-                    col = Color.Red;
+                    col = Color.FromArgb(255, 50, 50);
                 else
                 {
                     col = ColorList[Math.Abs(m.User.Class) % ColorList.Length];
@@ -149,8 +160,8 @@ namespace LiveSplit.Racetime.View
                 bool firstWord = true;
 
                 if(m.Highlight)
-                {
-                    chatBox.SelectionColor = Color.SeaGreen;
+                {//255 94 94, 2 198 34, 255 50 50, 155 178 0
+                    chatBox.SelectionColor = PickHighlightColor(m);
                 }
 
                 foreach(var word in words)
@@ -183,6 +194,24 @@ namespace LiveSplit.Racetime.View
                 chatBox.ScrollToCaret();
             }
            
+        }
+
+        private Color PickHighlightColor(ChatMessage m)
+        {
+            if (m is ErrorMessage)
+                return Color.FromArgb(255, 94, 94);
+            if(m is RaceBotMessage || m is LiveSplitMessage)
+            {
+                if (m.Message.Contains("finish") || m.Message.Contains("begun"))
+                    return Color.FromArgb(2, 198, 34);
+                else if (m.Message.Contains("cancel") || m.Message.Contains("forfeit") || m.Message.Contains("disqual"))
+                    return Color.FromArgb(255, 94, 94);
+                else if(m.Message.Contains("begin"))
+                    return Color.FromArgb(155, 178, 0);
+
+            }
+
+            return Color.White;
         }
 
         private void Channel_GoalChanged(object sender, EventArgs e)

@@ -26,13 +26,11 @@ namespace LiveSplit.Racetime.View
             if(user.Place>0)
             {
                 placementLabel.Text = user.PlaceOrdinal;
-                //placementLabel.Width = 10;
-                //placementLabel.Visible = true;
                 switch(user.Place)
                 {
-                    case 1: placementLabel.ForeColor = Color.Gold; break;
-                    case 2: placementLabel.ForeColor = Color.FromArgb(100, 100, 100); break;
-                    case 3: placementLabel.ForeColor = Color.FromArgb(100, 65, 0); break;
+                    case 1: placementLabel.ForeColor = Color.FromArgb(246,218,22); break;
+                    case 2: placementLabel.ForeColor = Color.FromArgb(180, 180, 180); break;
+                    case 3: placementLabel.ForeColor = Color.FromArgb(209, 123, 40); break;
                     default: placementLabel.ForeColor = Color.White; break;
                 }
 
@@ -40,13 +38,12 @@ namespace LiveSplit.Racetime.View
             else
             {
                 placementLabel.Text = "";
-                //placementLabel.Visible = false;
             }
 
 
             liveStatusImage.Image = null;
             if (user.Status == UserStatus.Forfeit || user.Status == UserStatus.Disqualified)
-                liveStatusImage.Image = Properties.Resources.flag;
+                liveStatusImage.Image = Properties.Resources.f;
             else if (user.IsLive || user.StreamOverride)
             {
                 liveStatusImage.Image = Properties.Resources.live;
@@ -57,15 +54,19 @@ namespace LiveSplit.Racetime.View
                 liveStatusImage.Image = Properties.Resources.not_live;
             
 
-            /*if (user.StreamOverride)
-                liveStatusImage.Image = Properties.Resources.live_and_ready;*/
-
-            //Console.WriteLine(user.FinishTime);
             var finishtime = user.FinishedAt - raceStartingTime;
-            /*Console.WriteLine(user.FinishedAt);
-            Console.WriteLine(raceStartingTime);
-            Console.WriteLine(finishtime);*/
-            timeLabel.Text = (user.HasFinished) ? string.Format(string.Format("{0:hh\\:mm\\:ss}", finishtime)) : "";
+          
+            if(user.Status == UserStatus.Disqualified || user.Status == UserStatus.Forfeit)
+            {
+                timeLabel.Text = "- - : - - : - -";
+            }
+            else if (user.HasFinished)
+            {
+                timeLabel.Text = string.Format("{0:hh\\:mm\\:ss}", finishtime);
+            }
+            else
+                timeLabel.Text = "";
+
 
         }
     }

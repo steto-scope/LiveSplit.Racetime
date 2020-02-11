@@ -29,11 +29,11 @@
         private void InitializeComponent()
         {
             this.mainLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
-            this.liveStatusImage = new System.Windows.Forms.PictureBox();
             this.placementLabel = new System.Windows.Forms.Label();
-            this.roleImage = new System.Windows.Forms.PictureBox();
             this.usernameLabel = new System.Windows.Forms.Label();
             this.timeLabel = new System.Windows.Forms.Label();
+            this.liveStatusImage = new System.Windows.Forms.PictureBox();
+            this.roleImage = new System.Windows.Forms.PictureBox();
             this.mainLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.liveStatusImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.roleImage)).BeginInit();
@@ -49,8 +49,39 @@
             this.mainLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainLayoutPanel.Location = new System.Drawing.Point(0, 0);
             this.mainLayoutPanel.Name = "mainLayoutPanel";
-            this.mainLayoutPanel.Size = new System.Drawing.Size(280, 16);
+            this.mainLayoutPanel.Size = new System.Drawing.Size(230, 16);
             this.mainLayoutPanel.TabIndex = 0;
+            // 
+            // placementLabel
+            // 
+            this.placementLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.placementLabel.AutoSize = true;
+            this.placementLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.placementLabel.Location = new System.Drawing.Point(16, 1);
+            this.placementLabel.Margin = new System.Windows.Forms.Padding(0);
+            this.placementLabel.Name = "placementLabel";
+            this.placementLabel.Size = new System.Drawing.Size(24, 13);
+            this.placementLabel.TabIndex = 2;
+            this.placementLabel.Text = "1st";
+            // 
+            // usernameLabel
+            // 
+            this.usernameLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.usernameLabel.Location = new System.Drawing.Point(56, 1);
+            this.usernameLabel.Margin = new System.Windows.Forms.Padding(0);
+            this.usernameLabel.Name = "usernameLabel";
+            this.usernameLabel.Size = new System.Drawing.Size(100, 13);
+            this.usernameLabel.TabIndex = 1;
+            this.usernameLabel.Text = "Name";
+            // 
+            // timeLabel
+            // 
+            this.timeLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.timeLabel.AutoSize = true;
+            this.timeLabel.Location = new System.Drawing.Point(159, 1);
+            this.timeLabel.Name = "timeLabel";
+            this.timeLabel.Size = new System.Drawing.Size(0, 13);
+            this.timeLabel.TabIndex = 4;
             // 
             // liveStatusImage
             // 
@@ -63,20 +94,9 @@
             this.liveStatusImage.TabIndex = 0;
             this.liveStatusImage.TabStop = false;
             // 
-            // placementLabel
-            // 
-            this.placementLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.placementLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.placementLabel.Location = new System.Drawing.Point(16, 1);
-            this.placementLabel.Margin = new System.Windows.Forms.Padding(0);
-            this.placementLabel.Name = "placementLabel";
-            this.placementLabel.Size = new System.Drawing.Size(28, 13);
-            this.placementLabel.TabIndex = 2;
-            this.placementLabel.Text = "1st";
-            // 
             // roleImage
             // 
-            this.roleImage.Location = new System.Drawing.Point(44, 0);
+            this.roleImage.Location = new System.Drawing.Point(40, 0);
             this.roleImage.Margin = new System.Windows.Forms.Padding(0);
             this.roleImage.Name = "roleImage";
             this.roleImage.Size = new System.Drawing.Size(16, 16);
@@ -84,34 +104,16 @@
             this.roleImage.TabStop = false;
             this.roleImage.Visible = false;
             // 
-            // usernameLabel
-            // 
-            this.usernameLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.usernameLabel.Location = new System.Drawing.Point(60, 1);
-            this.usernameLabel.Margin = new System.Windows.Forms.Padding(0);
-            this.usernameLabel.Name = "usernameLabel";
-            this.usernameLabel.Size = new System.Drawing.Size(100, 13);
-            this.usernameLabel.TabIndex = 1;
-            this.usernameLabel.Text = "Name";
-            // 
-            // timeLabel
-            // 
-            this.timeLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.timeLabel.AutoSize = true;
-            this.timeLabel.Location = new System.Drawing.Point(163, 1);
-            this.timeLabel.Name = "timeLabel";
-            this.timeLabel.Size = new System.Drawing.Size(0, 13);
-            this.timeLabel.TabIndex = 4;
-            // 
             // RacerControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.Transparent;
             this.Controls.Add(this.mainLayoutPanel);
             this.ForeColor = System.Drawing.Color.White;
             this.Margin = new System.Windows.Forms.Padding(0);
             this.Name = "RacerControl";
-            this.Size = new System.Drawing.Size(280, 16);
+            this.Size = new System.Drawing.Size(230, 16);
             this.mainLayoutPanel.ResumeLayout(false);
             this.mainLayoutPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.liveStatusImage)).EndInit();

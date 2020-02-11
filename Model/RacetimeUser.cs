@@ -98,8 +98,10 @@ namespace LiveSplit.Racetime.Model
                 try
                 {
                     DateTime dt;
-                    if(DateTime.TryParse(Data.finished_at, out dt))
-                        return dt;
+                    if (DateTime.TryParse(Data.finished_at, out dt))
+                    {
+                        return dt.ToUniversalTime();
+                    }
                     return DateTime.MaxValue;
                 }
                 catch(Exception ex)

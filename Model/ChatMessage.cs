@@ -52,7 +52,7 @@ namespace LiveSplit.Racetime.Model
                 }
             }
         }
-        public bool Highlight
+        public virtual bool Highlight
         {
             get
             {
@@ -139,6 +139,8 @@ namespace LiveSplit.Racetime.Model
     public class ErrorMessage : ChatMessage
     {
         public override MessageType Type => MessageType.Error;
+
+        public override bool Highlight => true;
 
         public override RacetimeUser User
         {
