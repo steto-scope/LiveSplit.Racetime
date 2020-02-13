@@ -457,7 +457,7 @@ namespace LiveSplit.Racetime.View
             {
                 try
                 {
-                    WebRequest wr = WebRequest.Create($"{Channel.FullWebRoot}{Channel.Race.ID}/log");
+                    WebRequest wr = WebRequest.Create($"{Channel.FullWebRoot}{Channel.Race.Id}/log");
                     using (WebResponse sp = wr.GetResponse())
                     {
                         StreamReader sr = new StreamReader(sp.GetResponseStream());

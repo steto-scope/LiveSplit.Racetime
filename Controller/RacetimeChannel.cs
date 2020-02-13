@@ -80,7 +80,7 @@ namespace LiveSplit.Racetime.Controller
         private void Reconnect()
         {
             if(ConnectionError && Race!=null)
-                Connect(Race.ID);
+                Connect(Race.Id);
         }
 
         private async Task<bool> ReceiveAndProcess()

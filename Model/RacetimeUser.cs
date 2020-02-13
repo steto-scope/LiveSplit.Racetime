@@ -204,5 +204,6 @@ namespace LiveSplit.Racetime.Model
             };
             return Create<RacetimeUser>(dataroot);
         }
+
     }
 }

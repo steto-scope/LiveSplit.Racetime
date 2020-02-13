@@ -1,4 +1,5 @@
 ﻿using LiveSplit.Model;
+using LiveSplit.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Xml;
 
 namespace LiveSplit.Racetime.Model
 {
-    public class Race : RTModelBase
+    public class Race : RTModelBase, IRaceInfo
     {
         public static dynamic EntrantToUserConverter(dynamic e)
         {
@@ -54,18 +55,11 @@ namespace LiveSplit.Racetime.Model
                 return Data.allow_comments;
             }
         }
-        public string ID
-        {
-            get
-            {
-                return Data.name;
-            }
-        }
         public string ChannelName
         {
             get
             {
-                return ID.Substring(0,ID.IndexOf('/'));
+                return Id.Substring(0,Id.IndexOf('/'));
             }
         }
         public string Name
@@ -139,7 +133,7 @@ namespace LiveSplit.Racetime.Model
         {
             get
             {
-                return ID.Substring(ID.IndexOf('/')+1);
+                return Id.Substring(Id.IndexOf('/')+1);
             }
         }
         public RaceState State
@@ -173,20 +167,7 @@ namespace LiveSplit.Racetime.Model
             }
         }
        
-        public int NumFinishes
-        {
-            get
-            {
-                return Entrants.Count(x => x.Status == UserStatus.Finished);
-            }
-        }
-        public int NumDropOuts
-        {
-            get
-            {
-                return Entrants.Count(x => x.Status == UserStatus.Forfeit || x.Status == UserStatus.Disqualified);
-            }
-        }
+        
         public DateTime OpenedAt
         {
             get
@@ -209,6 +190,27 @@ namespace LiveSplit.Racetime.Model
             {
                 return RTModelBase.Create<RacetimeUser>(Data.opened_by);
             }
+        }
+
+        public int Finishes => Entrants.Count(x => x.Status == UserStatus.Finished);
+        public int Forfeits => Entrants.Count(x => x.Status == UserStatus.Forfeit || x.Status == UserStatus.Disqualified);
+
+        public string GameId =>  Data.category.slug;
+
+        public string GameName => Data.category.name;
+
+        public string Id => Data.name;
+
+        public IEnumerable<string> LiveStreams => Entrants.Where(x => x.Status != UserStatus.Forfeit && x.Status != UserStatus.Disqualified && !x.HasFinished).Select(x => x.TwitchName);
+
+        public int Starttime => StartedAt == DateTime.MaxValue ? 0 : (int)(StartedAt - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+
+        int IRaceInfo.State => State == RaceState.Open ? 1 : (State == RaceState.Started ? 3 : 42);
+
+
+        public bool IsParticipant(string username)
+        {
+            return Entrants.Any(x => x.Name.ToLower() == username.ToLower());
         }
     }
 }

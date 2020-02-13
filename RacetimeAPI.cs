@@ -1,13 +1,18 @@
-﻿using LiveSplit.Options;
+﻿using LiveSplit.Model;
+using LiveSplit.Options;
 using LiveSplit.Racetime.Controller;
 using LiveSplit.Racetime.Model;
+using LiveSplit.Racetime.View;
+using LiveSplit.UI.Components;
 using LiveSplit.Web;
 using LiveSplit.Web.SRL;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using UpdateManager;
@@ -31,12 +36,13 @@ using UpdateManager;
 
 namespace LiveSplit.Racetime
 {
-    public class RacetimeAPI : IUpdateable
+    public class RacetimeAPI : RaceProviderAPI, IUpdateable
     {
         protected static readonly Uri BaseUri = new Uri("http://192.168.178.70:8000/");
         protected static string racesEndpoint => "races/data";
 
-        public event EventHandler RacetimeRacesRefreshed;
+        
+
         private static RacetimeAPI _instance;
         public static RacetimeAPI Instance
         {
@@ -51,6 +57,19 @@ namespace LiveSplit.Racetime
         public RacetimeAPI()
         {
             Authenticator = new RacetimeAuthenticator(new RTAuthentificationSettings());
+            JoinRace = Join;
+            CreateRace = Create;
+        }
+
+        public void Join(ITimerModel model, string id)
+        {
+            var channel = new RacetimeChannel(model.CurrentState, model);
+            var form = new ChannelForm(channel, id);
+        }
+
+        public void Create(ITimerModel model)
+        {
+            Process.Start(GetUri("/").AbsoluteUri);
         }
 
         public IEnumerable<Race> Races { get; set; }
@@ -59,40 +78,55 @@ namespace LiveSplit.Racetime
 
         public string UpdateName => "Racetime Integration";
 
-        public string XMLURL => throw new NotImplementedException();
+        public string XMLURL => "";
 
-        public string UpdateURL => throw new NotImplementedException();
+        public string UpdateURL => "";
 
         public Version Version => new Version(0, 7);
+
+        public override string ProviderName => "Racetime";
+
+        public override string Username => Authenticator.Identity?.TwitchName;
 
         protected Uri GetUri(string subUri)
         {
             return new Uri(BaseUri, subUri);
         }
 
-        public void RefreshRacesListAsync()
+        public override void RefreshRacesListAsync()
         {
             Task.Factory.StartNew(() => RefreshRacesList());
         }
 
         protected void RefreshRacesList()
         {
-            Races = GetRaces().ToArray();
-            RacetimeRacesRefreshed?.Invoke(null, new EventArgs());
+            Races = GetRacesFromServer().ToArray();
+            RacesRefreshedCallback?.Invoke(this);
         }
 
-
-        protected IEnumerable<Race> GetRaces()
+        
+        protected IEnumerable<Race> GetRacesFromServer()
         {
             var races = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + racesEndpoint)).races;
         
             foreach (var r in races)
             {
-                yield return RTModelBase.Create<Race>(r);
+                var fulldata = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + r.name + "/data"));
+                Race raceObj = RTModelBase.Create<Race>(fulldata);
+                yield return raceObj;
             }
             yield break;
         }
 
+        
+        public override IEnumerable<IRaceInfo> GetRaces()
+        {
+            return Races;
+        }
 
+        public override Image GetGameImage(string id)
+        {
+            return null;
+        }
     }
 }
