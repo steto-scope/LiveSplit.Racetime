@@ -319,8 +319,10 @@ cleanup:
                     break;
             }
 
-    
-            var newIdentity = msg.Race.Entrants?.FirstOrDefault(x => x.Name.ToLower() == RacetimeAPI.Instance.Authenticator.Identity.Name.ToLower());
+            if (RacetimeAPI.Instance.Authenticator.Identity == null)
+                return;
+
+            var newIdentity = msg.Race.Entrants?.FirstOrDefault(x => x.Name.ToLower() == RacetimeAPI.Instance.Authenticator.Identity.Name?.ToLower());
             switch(newIdentity?.Status)
             {
                 case UserStatus.Racing:
