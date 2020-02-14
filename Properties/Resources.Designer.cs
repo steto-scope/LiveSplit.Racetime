@@ -167,7 +167,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die  ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die dKgJFc2jZjgMtUT4Ik9kyJSCZkVqRK1poCcvpKox ähnelt.
         /// </summary>
         internal static string OAUTH_CLIENTID {
             get {
@@ -176,7 +176,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die  ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die Rl6gGXy9zPw5xkSa0gSdE69lnlqbTwuZDAFNSDTgY5QKbQ9AqsqDYlotNGMBboDGkZFbJm9fSIpfI3sCGc3UiiZ2sEpk8KpxYf4kh0G7TjmYmgn0AXyNJNzkgIorHAcB ähnelt.
         /// </summary>
         internal static string OAUTH_CLIENTSECRET {
             get {

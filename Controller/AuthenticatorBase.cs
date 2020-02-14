@@ -1,4 +1,5 @@
 ﻿using LiveSplit.Racetime.Model;
+using LiveSplit.Web;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,8 +27,18 @@ namespace LiveSplit.Racetime.Controller
                 return $"http://{s.RedirectAddress}:{s.RedirectPort}/";
             }
         }
-        public string AccessToken { get; protected set; }
-        public string RefreshToken { get; protected set; }
+        
+
+        public string AccessToken
+        {
+            get { return CredentialManager.ReadCredential("LiveSplit_racetimegg_accesstoken")?.Password; }
+            set { CredentialManager.WriteCredential("LiveSplit_racetimegg_accesstoken", "", value); }
+        }
+        public string RefreshToken
+        {
+            get { return CredentialManager.ReadCredential("LiveSplit_racetimegg_refreshtoken")?.Password; }
+            set { CredentialManager.WriteCredential("LiveSplit_racetimegg_refreshtoken", "", value); }
+        }
         public RacetimeUser Identity { get; protected set; }
         public string Error { get; protected set; }
         public DateTime TokenExpireDate { get; protected set; }
@@ -76,7 +87,7 @@ namespace LiveSplit.Racetime.Controller
         }
 
         public abstract Task<bool> Authorize(bool forceRefresh = false);
-        public abstract Task<bool> RevokeAccess();
+        //public abstract Task<bool> RevokeAccess();
 
     }
 }

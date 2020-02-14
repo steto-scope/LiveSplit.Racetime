@@ -39,14 +39,14 @@ namespace LiveSplit.Racetime.Controller
         {
             get
             {
-                var u = Race?.Entrants?.FirstOrDefault(x => x.Name.ToLower() == Authenticator.Identity?.Name.ToLower());
+                var u = Race?.Entrants?.FirstOrDefault(x => x.Name.ToLower() == RacetimeAPI.Instance.Authenticator.Identity?.Name.ToLower());
                 if (u == null)
                     return UserStatus.Unknown;
                 return u.Status;
             }
         }
         protected ITimerModel Model { get; set; }
-        private RacetimeAuthenticator Authenticator { get; set; }
+        
         private ClientWebSocket ws;
         protected List<ChatMessage> log = new List<ChatMessage>();
         public bool ConnectionError { get; set; }
@@ -59,7 +59,7 @@ namespace LiveSplit.Racetime.Controller
 
         public RacetimeChannel(LiveSplitState state, ITimerModel model)
         {
-            Authenticator = new RacetimeAuthenticator(new RTAuthentificationSettings());
+            
             reconnect_cts = new CancellationTokenSource();
             RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 10), reconnect_cts.Token);
 
@@ -156,7 +156,7 @@ namespace LiveSplit.Racetime.Controller
                 return;
             }
             websocket_cts = new CancellationTokenSource();
-            
+            var Authenticator = RacetimeAPI.Instance.Authenticator;
 
             using (ws = new ClientWebSocket())
             {
@@ -305,7 +305,7 @@ cleanup:
             }
 
     
-            var newIdentity = msg.Race.Entrants?.FirstOrDefault(x => x.Name.ToLower() == Authenticator.Identity.Name.ToLower());
+            var newIdentity = msg.Race.Entrants?.FirstOrDefault(x => x.Name.ToLower() == RacetimeAPI.Instance.Authenticator.Identity.Name.ToLower());
             switch(newIdentity?.Status)
             {
                 case UserStatus.Racing:
@@ -431,7 +431,7 @@ cleanup:
                 websocket_cts.Cancel();
             reconnect_cts.Cancel();
 
-            Authenticator.RevokeAccess();
+            //Authenticator.RevokeAccess();
 
             Model.Reset();
             Model.CurrentState.Run.Offset = TimeSpan.Zero;

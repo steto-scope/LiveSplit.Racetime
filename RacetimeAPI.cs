@@ -29,6 +29,7 @@ namespace LiveSplit.Racetime
             }
         }
 
+
         public RacetimeAPI()
         {
             Authenticator = new RacetimeAuthenticator(new RTAuthentificationSettings());
@@ -40,7 +41,7 @@ namespace LiveSplit.Racetime
         {
 
             var channel = new RacetimeChannel(model.CurrentState, model);
-            var form = new ChannelForm(channel, id);
+            var form = new ChannelForm(channel, id, model.CurrentState.LayoutSettings.AlwaysOnTop);
         }
 
         public void Warn()
@@ -57,7 +58,7 @@ namespace LiveSplit.Racetime
 
         public AuthenticatorBase Authenticator { get; set; }
 
-        public override string ProviderName => "Racetime";
+        public override string ProviderName => "racetime.gg";
 
         public override string Username => Authenticator.Identity?.Name;
 

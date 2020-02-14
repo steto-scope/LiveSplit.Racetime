@@ -86,8 +86,11 @@ namespace LiveSplit.Racetime.Controller
             //token refresh currently not implemented 
 
             Error = null;
-            string reqState, state, verifier, challenge, request, response;
-            TcpListener localEndpoint;
+            string reqState, state, verifier = null, challenge, request, response;
+            TcpListener localEndpoint = null;
+
+            if (RefreshToken != null)
+                goto reauthorize;
 
 reauthenticate:            
 
@@ -107,7 +110,11 @@ reauthenticate:
 
             using (TcpClient serverConnection = await localEndpoint.AcceptTcpClientAsync())
             {
-                response = ReadResponse(serverConnection);              
+                response = ReadResponse(serverConnection);
+                
+                localEndpoint.Stop();
+                localEndpoint.Server.Close();
+                localEndpoint = null;
 
                 foreach (Match m in parameterRegex.Matches(response))
                 {
@@ -142,14 +149,19 @@ reauthenticate:
                 }
 
                 await SendRedirectAsync(serverConnection, s.SuccessEndpoint);
+                serverConnection.Close();
             }
-            localEndpoint.Stop();
-            localEndpoint = null;
+            if (localEndpoint != null)
+            {
+                localEndpoint.Stop();
+                localEndpoint.Server.Close();
+                localEndpoint = null;
+            }
 
-
+reauthorize:
             //Step 2: Getting authorized     
             request = $"code={Code}&redirect_uri={RedirectUri}&client_id={s.ClientID}&code_verifier={verifier}&client_secret={s.ClientSecret}" + (!IsRefreshRequired ? $"&scope={s.Scopes}&grant_type=authorization_code" : $"&refresh_token={RefreshToken}&grant_type=refresh_token");
-            Console.WriteLine(request);
+            
             var result = await RestRequest(s.TokenEndpoint, request);
             if (result.Item1 != 200)
             {
@@ -240,7 +252,7 @@ failure:
         }
               
 
-        public override async Task<bool> RevokeAccess()
+        /*public override async Task<bool> RevokeAccess()
         {
             string request = $"token={AccessToken}&client_id={s.ClientID}&client_secret+{s.ClientSecret}&grant_type=authorization_code&code={Code}";
 
@@ -257,7 +269,7 @@ failure:
             }
 
             return false;
-        }
+        }*/
     }
 
 }
