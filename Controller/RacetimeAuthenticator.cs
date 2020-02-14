@@ -223,6 +223,11 @@ failure:
             }            
         }
 
+        public void UpdateUserInfo()
+        {
+            Identity = GetUserInfo(s, AccessToken);
+        }
+
         public async Task<Tuple<int, dynamic>> RestRequest(string endpoint, string body)
         {
             string state = GenerateRandomBase64Data(32);

@@ -153,6 +153,10 @@ namespace LiveSplit.Racetime.Controller
                 RacetimeAPI.Instance.Authenticator.RefreshToken = null;
                 ForceReload();
                 return true;
+            } else if(errormsg != null)
+            {
+                StateChanged?.Invoke(this, Race.State);
+                UserListRefreshed?.Invoke(this, new EventArgs());
             }
             MessageReceived?.Invoke(this, chatmessages);
             return true;
@@ -187,6 +191,10 @@ namespace LiveSplit.Racetime.Controller
                         AuthenticationFailed?.Invoke(this, new EventArgs());
                         goto cleanup;
                     }
+                }
+                else
+                {
+                    ((RacetimeAuthenticator)Authenticator).UpdateUserInfo();
                 }
                 //opening the socket
                 ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
@@ -309,7 +317,7 @@ cleanup:
                 return;
             }
 
-            switch (msg.Race.State)
+            switch (msg.Race?.State)
             {
                 case Racetime.Model.RaceState.Starting:
                     Model.Start();
@@ -346,7 +354,7 @@ cleanup:
                     break;
             }
 
-            Race = msg.Race;
+            Race = msg.Race ?? Race;
             StateChanged?.Invoke(this, Race.State);
             UserListRefreshed?.Invoke(this, new EventArgs());
             GoalChanged?.Invoke(this, new EventArgs());
