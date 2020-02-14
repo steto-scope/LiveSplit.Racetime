@@ -184,12 +184,13 @@ reauthorize:
             //Step 3: Update User Information       
             try
             {
-                var userInfoRequest = WebRequest.Create($"{s.AuthServer}{s.UserInfoEndpoint}");
-                userInfoRequest.Headers.Add(HttpRequestHeader.Authorization, $"Bearer {AccessToken}");
-                using (var r = userInfoRequest.GetResponse())
+                Identity = GetUserInfo(s, AccessToken);
+                if(Identity == null)
                 {
-                    var userdata = JSON.FromResponse(r);
-                    Identity = RTModelBase.Create<RacetimeUser>(userdata);
+                    Error = "Access denied. Reauthorizing required.";
+                    AccessToken = null;
+                    RefreshToken = null;
+                    goto failure;
                 }
             }
             catch (Exception ex)
@@ -209,6 +210,17 @@ failure:
             }
             Reset();
             return false;
+        }
+
+        public RacetimeUser GetUserInfo(IAuthentificationSettings s, string AccessToken)
+        {
+            var userInfoRequest = WebRequest.Create($"{s.AuthServer}{s.UserInfoEndpoint}");
+            userInfoRequest.Headers.Add(HttpRequestHeader.Authorization, $"Bearer {AccessToken}");
+            using (var r = userInfoRequest.GetResponse())
+            {
+                var userdata = JSON.FromResponse(r);
+                return RTModelBase.Create<RacetimeUser>(userdata);
+            }            
         }
 
         public async Task<Tuple<int, dynamic>> RestRequest(string endpoint, string body)

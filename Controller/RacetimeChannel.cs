@@ -77,10 +77,12 @@ namespace LiveSplit.Racetime.Controller
             Model.Pause();
         }
 
-        private void Reconnect()
+        private async void Reconnect()
         {
-            if(ConnectionError && Race!=null)
+            if (ConnectionError && Race != null)
+            {
                 Connect(Race.Id);
+            }
         }
 
         private async Task<bool> ReceiveAndProcess()
@@ -142,6 +144,15 @@ namespace LiveSplit.Racetime.Controller
             if (racemessage != null)
             {
                 UpdateRaceData((RaceMessage)racemessage);
+            }
+
+            var errormsg = chatmessages.FirstOrDefault(x => x.Type == MessageType.Error)?.Message;
+            if (errormsg != null && string.Join("",errormsg).Contains("Permission denied"))
+            {
+                RacetimeAPI.Instance.Authenticator.AccessToken = null;
+                RacetimeAPI.Instance.Authenticator.RefreshToken = null;
+                ForceReload();
+                return true;
             }
             MessageReceived?.Invoke(this, chatmessages);
             return true;
@@ -205,9 +216,13 @@ namespace LiveSplit.Racetime.Controller
                         else
                             Model.CurrentState.Run.Offset = -Race.StartDelay;
                     }
-                    catch
+                    catch(Exception ex)
                     {
+
                         SendSystemMessage("Unable to obtain Race information. Try reloading");
+                        //Authenticator.AccessToken = null;
+                        //Authenticator.RefreshToken = null;
+
                         goto cleanup;
                     }
                     try
