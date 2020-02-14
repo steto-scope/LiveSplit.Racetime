@@ -36,7 +36,7 @@ using UpdateManager;
 
 namespace LiveSplit.Racetime
 {
-    public class RacetimeAPI : RaceProviderAPI, IUpdateable
+    public class RacetimeAPI : RaceProviderAPI
     {
         protected static readonly Uri BaseUri = new Uri("http://192.168.178.70:8000/");
         protected static string racesEndpoint => "races/data";
@@ -76,17 +76,9 @@ namespace LiveSplit.Racetime
 
         public AuthenticatorBase Authenticator { get; set; }
 
-        public string UpdateName => "Racetime Integration";
-
-        public string XMLURL => "";
-
-        public string UpdateURL => "";
-
-        public Version Version => new Version(0, 7);
-
         public override string ProviderName => "Racetime";
 
-        public override string Username => Authenticator.Identity?.TwitchName;
+        public override string Username => Authenticator.Identity?.Name;
 
         protected Uri GetUri(string subUri)
         {

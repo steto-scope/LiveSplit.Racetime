@@ -37,7 +37,8 @@
     <Reference Include="DarkUI, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\DarkUI.2.0.0\lib\DarkUI.dll</HintPath>
     </Reference>
-    <Reference Include="LiveSplit.Core">
+    <Reference Include="LiveSplit.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\LiveSplit\LiveSplit\bin\Debug\LiveSplit.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
