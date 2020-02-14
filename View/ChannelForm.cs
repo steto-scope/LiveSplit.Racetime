@@ -27,8 +27,6 @@ namespace LiveSplit.Racetime.View
         private static Regex urlPattern = new Regex(@"\b((ftp|https?):\/\/[-\w]+(\.\w[-\w]*)+|(?:[a-z0-9](?:[-a-z0-9]*[a-z0-9])?\.)+(?: com\b|edu\b|biz\b|gov\b|in(?:t|fo)\b|mil\b|net\b|org\b|[a-z][a-z]\b))(\:\d+)?(\/[^.!,?;""'<>()\[\]{}\s\x7F-\xFF]*(?:[.!,?]+[^.!,?;""'<>()\[\]{}\s\x7F-\xFF]+)*)?", RegexOptions.Compiled| RegexOptions.IgnoreCase);
         
         private bool formClosing;
-        //private int reconnectTries = 0;
-        //private int maxReconnectTries = 5;
 
         internal ChannelForm()
         {
@@ -66,6 +64,7 @@ namespace LiveSplit.Racetime.View
             Channel.RawMessageReceived += Channel_RawMessageReceived;
             Channel.RequestOutputReset += Channel_RequestOutputReset;
             Channel.Disconnected += Channel_Disconnected;
+            Channel.Authorized += Channel_Authorized;
             
 
             InitializeComponent();
@@ -77,6 +76,11 @@ namespace LiveSplit.Racetime.View
             actionButton.Enabled = false;
             Channel.Connect(channelId);
             infoLabel.LinkClicked += (ss, args) => { if (urlPattern.IsMatch(infoLabel.Text)) Process.Start(infoLabel.Text.Substring(args.Link.Start,args.Link.Length)); };
+        }
+
+        private void Channel_Authorized(object sender, EventArgs e)
+        {
+            Focus();
         }
 
         protected void DownloadAllEmotes()
@@ -152,7 +156,7 @@ namespace LiveSplit.Racetime.View
                 }
                 
                 if(!hideUsername)
-                    chatBox.AppendText( m.IsSystem/*m.User == RacetimeUser.RaceBot*/ ? "  "+m.User.Name+"  " : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
+                    chatBox.AppendText( m.IsSystem ? "   "+m.User?.Name : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
 
                 chatBox.AppendText("  ");
 
@@ -160,7 +164,7 @@ namespace LiveSplit.Racetime.View
                 bool firstWord = true;
 
                 if(m.Highlight)
-                {//255 94 94, 2 198 34, 255 50 50, 155 178 0
+                {
                     chatBox.SelectionColor = PickHighlightColor(m);
                 }
 
@@ -221,7 +225,6 @@ namespace LiveSplit.Racetime.View
             var s = Channel.Race.Info;
             Console.WriteLine(s);
             infoLabel.Text = s;
-            //infoLabel.Text = s;
 
             MatchCollection mc = urlPattern.Matches(s);
 
@@ -357,9 +360,6 @@ namespace LiveSplit.Racetime.View
                 case UserStatus.Ready:
                     Channel.SendChannelMessage(".quit");
                     break;
-                /*case UserStatus.Ready:
-                    Channel.SendChannelMessage(".quit");
-                    break;*/
                 case UserStatus.Racing:
                     r = MessageBox.Show("Are you sure that you want forfeit this race?", "", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (r == DialogResult.Yes)
@@ -388,7 +388,7 @@ namespace LiveSplit.Racetime.View
 
         private void ChannelWindow_Load(object sender, EventArgs e)
         {
-            
+            chatBox.Focus();
         }
 
         private void inputBox_KeyDown(object sender, KeyEventArgs e)
@@ -434,6 +434,7 @@ namespace LiveSplit.Racetime.View
             Channel.UserListRefreshed -= Channel_UserListRefreshed;
             Channel.GoalChanged -= Channel_GoalChanged;
             Channel.MessageReceived -= Channel_ChatUpdate;
+            Channel.Authorized -= Channel_Authorized;
 
             Channel.Disconnect();
         }

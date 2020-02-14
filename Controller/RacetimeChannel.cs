@@ -10,10 +10,8 @@ using System.Windows.Forms;
 using LiveSplit.Model;
 using LiveSplit.Model.Comparisons;
 using LiveSplit.Model.Input;
-using LiveSplit.Options;
 using LiveSplit.Racetime.Model;
 using LiveSplit.Web;
-using LiveSplit.Web.SRL;
 
 namespace LiveSplit.Racetime.Controller
 {
@@ -30,15 +28,11 @@ namespace LiveSplit.Racetime.Controller
             }
         }
 
-        public const string restProto = "http";
-        public const string wsProto = "ws";
-        public const string serverDomain = "192.168.178.70";
         public const int bufferSize = 20480;
         public const int maxBufferSize = 2097152;
-        public const int serverPort = 8000;
 
-        public string FullWebRoot => string.Format("{0}://{1}:{2}/", restProto, serverDomain, serverPort);
-        public string FullSocketRoot => string.Format("{0}://{1}:{2}/", wsProto, serverDomain, serverPort);
+        public string FullWebRoot => string.Format("{0}://{1}/", Properties.Resources.PROTOCOL_REST, Properties.Resources.DOMAIN);
+        public string FullSocketRoot => string.Format("{0}://{1}/", Properties.Resources.PROTOCOL_WEBSOCKET, Properties.Resources.DOMAIN);
 
         public Race Race { get; set; }
         public UserStatus PersonalStatus
@@ -70,7 +64,7 @@ namespace LiveSplit.Racetime.Controller
             RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 10), reconnect_cts.Token);
 
            
-            this.Model = model;
+            Model = model;
             
             state.OnSplit += State_OnSplit;
             state.OnUndoSplit += State_OnUndoSplit;
@@ -173,8 +167,8 @@ namespace LiveSplit.Racetime.Controller
                 {
                     if (await Authenticator.Authorize())
                     {
-                        Console.WriteLine(Authenticator.Identity);
                         SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
+                        Authorized?.Invoke(this, null);
                     }
                     else
                     {
@@ -247,7 +241,6 @@ namespace LiveSplit.Racetime.Controller
                     }
                     catch (Exception ex)
                     {
-                        //Console.WriteLine(ex.InnerException.Message);
                     }
                 }
 
@@ -345,7 +338,6 @@ cleanup:
 
         public IEnumerable<ChatMessage> Parse(dynamic m)
         {
-           // Console.WriteLine(m.GetType().ToString() + m.ToString());
             switch (m.type)
             {
                 case "error":
@@ -364,7 +356,6 @@ cleanup:
                     RequestOutputReset?.Invoke(this, new EventArgs());
                     foreach (var msg in m.messages)
                     {
-                        //Console.WriteLine(msg);
                         if (msg.user == null)
                             yield return RTModelBase.Create<RaceBotMessage>(msg);
                         else
@@ -424,6 +415,7 @@ cleanup:
         public event EventHandler UserListRefreshed;
         public event EventHandlerT<IEnumerable<ChatMessage>> MessageReceived;
         public event EventHandler RequestOutputReset;
+        public event EventHandler Authorized;
 
 
 
@@ -439,12 +431,16 @@ cleanup:
                 websocket_cts.Cancel();
             reconnect_cts.Cancel();
 
+            Authenticator.RevokeAccess();
+
             Model.Reset();
-            //Model.CurrentState.Run.Clear();
+            Model.CurrentState.Run.Offset = TimeSpan.Zero;
             Model.OnPause -= Model_OnPause;
             Model.OnSplit -= State_OnSplit;
             Model.OnReset -= State_OnReset;
             Model.OnUndoSplit -= State_OnUndoSplit;
+
+            
         }
 
         public void Forfeit()
@@ -455,7 +451,7 @@ cleanup:
         
         public void RemoveRaceComparisons()
         {
-            Console.WriteLine("Remove Race Comparisons");
+
         }
 
         public bool TryCreateCommand(ref string message)
@@ -466,7 +462,6 @@ cleanup:
                 end = message.IndexOf(' ') <= 0 ? message.Length - 1 : message.IndexOf(' ') - 1;
 
                 var command = message.Substring(1, end).TrimEnd().ToLower();
-                //var parameter = message.Substring(message.IndexOf(' ')).TrimStart();
                 message = "{ \"action\": \""+command+"\" }";
                 return true;
             }

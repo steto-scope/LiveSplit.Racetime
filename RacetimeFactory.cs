@@ -21,11 +21,11 @@ namespace LiveSplit.Racetime
         
         public string UpdateName => "Racetime Integration";
 
-        public string XMLURL => "https://steto-scope.github.io/LiveSplit.Racetime/update.racetime.xml";
+        public string XMLURL => Properties.Resources.UPDATE_DEFINITION;
 
-        public string UpdateURL => "https://github.com/steto-scope/LiveSplit.Racetime/releases/download/";
+        public string UpdateURL => Properties.Resources.UPDATE_DATA;
 
-        public Version Version => new Version(0, 7);
+        public Version Version => Version.Parse(Properties.Resources.PLUGIN_VERSION);
 
         
     }

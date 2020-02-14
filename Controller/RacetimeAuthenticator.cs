@@ -81,14 +81,13 @@ namespace LiveSplit.Racetime.Controller
         }
                
 
-        
-
         public override async Task<bool> Authorize(bool forceRefresh = false)
         {
+            //token refresh currently not implemented 
+
             Error = null;
             string reqState, state, verifier, challenge, request, response;
             TcpListener localEndpoint;
-            bool refresh = false;// IsRefreshRequired || forceRefresh; //if we were authorized, but know that the token already expired, go right to the refresh
 
 reauthenticate:            
 
@@ -124,9 +123,8 @@ reauthenticate:
                 {
                     if (Error == "invalid_token" && RefreshToken != null)
                     {
-                        //try again, but this time to refresh
-                        //refresh = true;
-                        goto reauthenticate;
+                        Error = "Access Token expired";
+                        goto failure;
                     }
                     else
                     {
@@ -151,7 +149,7 @@ reauthenticate:
 
             //Step 2: Getting authorized     
             request = $"code={Code}&redirect_uri={RedirectUri}&client_id={s.ClientID}&code_verifier={verifier}&client_secret={s.ClientSecret}" + (!IsRefreshRequired ? $"&scope={s.Scopes}&grant_type=authorization_code" : $"&refresh_token={RefreshToken}&grant_type=refresh_token");
-        
+            Console.WriteLine(request);
             var result = await RestRequest(s.TokenEndpoint, request);
             if (result.Item1 != 200)
             {

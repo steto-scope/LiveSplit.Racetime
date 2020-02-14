@@ -16,7 +16,14 @@ namespace LiveSplit.Racetime.Model
         {
             get
             {
-                return Data.message;
+                try
+                {
+                    return Data.message_plain;
+                }
+                catch
+                {
+                    return Data.message;
+                }
             }
         }
         public virtual RacetimeUser User

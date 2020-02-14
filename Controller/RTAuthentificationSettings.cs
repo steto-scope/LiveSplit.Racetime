@@ -9,18 +9,18 @@ namespace LiveSplit.Racetime.Controller
 {
     internal class RTAuthentificationSettings : IAuthentificationSettings
     {
-        public virtual string ClientID => "Rt8ey6rjcQblDxxuERCxZOfJ9p59ANnFWF92HueU";
-        public virtual string ClientSecret => "JYVuPmXmylFc3J8vNN3W8egUmeJ9bRPQGCTvZqEjc24KMaCpihhRA0cK7GNZCOxADkJyYo3mjxvuVcaj4OKUv8dZDUmMqa91kuQWf8eV9YwEmalsedMbZZcfAgAW6rAT";
-        public virtual string AuthServer => "http://192.168.178.70:8000/";
-        public virtual string SuccessEndpoint => "o/done";
-        public virtual string FailureEndpoint => "o/done?error=access_denied";
-        public virtual string AuthorizationEndpoint => "o/authorize";
-        public virtual string TokenEndpoint => "o/token";
-        public virtual string UserInfoEndpoint => "o/userinfo";
-        public virtual string RevokeEndpoint => "o/revoke_token/";
-        public virtual string Scopes => "read chat_message race_action";
-        public virtual IPAddress RedirectAddress => IPAddress.Loopback;
-        public virtual int RedirectPort => 6969;
-        public virtual string ChallengeMethod => "S256";
+        public virtual string ClientID => Properties.Resources.OAUTH_CLIENTID;
+        public virtual string ClientSecret => Properties.Resources.OAUTH_CLIENTSECRET;
+        public virtual string AuthServer => Properties.Resources.OAUTH_SERVER;
+        public virtual string SuccessEndpoint => Properties.Resources.OAUTH_ENDPOINT_SUCCESS;
+        public virtual string FailureEndpoint => Properties.Resources.OAUTH_ENDPOINT_FAILURE;
+        public virtual string AuthorizationEndpoint => Properties.Resources.OAUTH_ENDPOINT_AUTHORIZATION;
+        public virtual string TokenEndpoint => Properties.Resources.OAUTH_ENDPOINT_TOKEN;
+        public virtual string UserInfoEndpoint => Properties.Resources.OAUTH_ENDPOINT_USERINFO;
+        public virtual string RevokeEndpoint => Properties.Resources.OAUTH_ENDPOINT_REVOKE;
+        public virtual string Scopes => Properties.Resources.OAUTH_SCOPES;
+        public virtual IPAddress RedirectAddress => IPAddress.Parse(Properties.Resources.OAUTH_REDIRECT_ADDRESS);
+        public virtual int RedirectPort => int.Parse(Properties.Resources.OAUTH_REDIRECT_PORT);
+        public virtual string ChallengeMethod => Properties.Resources.OAUTH_CHALLENGE_METHOD;
     }
 }

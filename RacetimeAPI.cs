@@ -1,48 +1,22 @@
 ﻿using LiveSplit.Model;
-using LiveSplit.Options;
 using LiveSplit.Racetime.Controller;
 using LiveSplit.Racetime.Model;
 using LiveSplit.Racetime.View;
 using LiveSplit.UI.Components;
 using LiveSplit.Web;
-using LiveSplit.Web.SRL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using UpdateManager;
-
-/*
- 
- Races List:
- 
- {
-  "count": "5552",
-  "games": [
-    {
-      "id": 1,
-      "name": "Super Mario 64",
-      "abbrev": "sm64",
-      "popularity": 974,
-      "popularityrank": 1
-    },
-*/
-
 
 namespace LiveSplit.Racetime
 {
     public class RacetimeAPI : RaceProviderAPI
     {
-        protected static readonly Uri BaseUri = new Uri("http://192.168.178.70:8000/");
-        protected static string racesEndpoint => "races/data";
-
-        
+        protected static readonly Uri BaseUri = new Uri($"{Properties.Resources.PROTOCOL_REST}://{Properties.Resources.DOMAIN}/");
+        protected static string racesEndpoint => Properties.Resources.ENDPOINT_RACES;
 
         private static RacetimeAPI _instance;
         public static RacetimeAPI Instance
@@ -64,23 +38,6 @@ namespace LiveSplit.Racetime
 
         public void Join(ITimerModel model, string id)
         {
-        /*    if (model.CurrentState.Run.HasChanged)
-            {
-                try
-                {
-                    var result = MessageBox.Show("Your splits have been updated but not yet saved.\nEntering a race will reset your splits.\nDo you want to continue anyways?", "Save Splits?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (result == DialogResult.Yes)
-                    {
-                        
-                    }
-                    else 
-                    {
-                        return;
-                    }
-                }
-                catch{ }
-            }
-            model.Reset();*/
 
             var channel = new RacetimeChannel(model.CurrentState, model);
             var form = new ChannelForm(channel, id);
@@ -93,7 +50,7 @@ namespace LiveSplit.Racetime
 
         public void Create(ITimerModel model)
         {
-            Process.Start(GetUri("/").AbsoluteUri);
+            Process.Start(GetUri(Properties.Resources.CREATE_RACE_ADDRESS).AbsoluteUri);
         }
 
         public IEnumerable<Race> Races { get; set; }
