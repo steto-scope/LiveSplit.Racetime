@@ -152,7 +152,7 @@ namespace LiveSplit.Racetime.View
                 }
                 
                 if(!hideUsername)
-                    chatBox.AppendText(m.User == RacetimeUser.RaceBot ? "  "+m.User.Name+"  " : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
+                    chatBox.AppendText( m.IsSystem/*m.User == RacetimeUser.RaceBot*/ ? "  "+m.User.Name+"  " : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
 
                 chatBox.AppendText("  ");
 

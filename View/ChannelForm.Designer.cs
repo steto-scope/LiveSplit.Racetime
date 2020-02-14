@@ -38,6 +38,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.infoLabel = new System.Windows.Forms.LinkLabel();
             this.chatBox = new System.Windows.Forms.RichTextBox();
+            this.userlist = new LiveSplit.Racetime.View.UserListControl();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
@@ -52,7 +53,6 @@
             this.hideFinishesToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.hideMidraceChatToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.forceReloadToolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.userlist = new LiveSplit.Racetime.View.UserListControl();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -208,9 +208,22 @@
             this.chatBox.Location = new System.Drawing.Point(0, 0);
             this.chatBox.Name = "chatBox";
             this.chatBox.ReadOnly = true;
+            this.chatBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
             this.chatBox.Size = new System.Drawing.Size(550, 374);
             this.chatBox.TabIndex = 0;
             this.chatBox.Text = "";
+            // 
+            // userlist
+            // 
+            this.userlist.AutoSize = true;
+            this.userlist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(63)))), ((int)(((byte)(65)))));
+            this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.userlist.Location = new System.Drawing.Point(0, 0);
+            this.userlist.Margin = new System.Windows.Forms.Padding(0);
+            this.userlist.MinimumSize = new System.Drawing.Size(100, 100);
+            this.userlist.Name = "userlist";
+            this.userlist.Size = new System.Drawing.Size(230, 400);
+            this.userlist.TabIndex = 0;
             // 
             // splitContainer3
             // 
@@ -245,6 +258,7 @@
             // splitContainer4.Panel2
             // 
             this.splitContainer4.Panel2.Controls.Add(this.inputBox);
+            this.splitContainer4.Panel2.Padding = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.splitContainer4.Size = new System.Drawing.Size(571, 57);
             this.splitContainer4.SplitterDistance = 28;
             this.splitContainer4.TabIndex = 2;
@@ -270,7 +284,8 @@
             this.hideFinishesCheckBox.Size = new System.Drawing.Size(86, 17);
             this.hideFinishesCheckBox.TabIndex = 0;
             this.hideFinishesCheckBox.Text = "Hide Results";
-            this.hideFinishesToolTip.SetToolTip(this.hideFinishesCheckBox, "Hides all information that could reveal finishes or forfeits");
+            this.hideFinishesToolTip.SetToolTip(this.hideFinishesCheckBox, "Hides all information that could reveal finishes or forfeits until you finish or " +
+        "forfeit yourself");
             // 
             // hideChatCheckBox
             // 
@@ -310,11 +325,11 @@
             this.inputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(69)))), ((int)(((byte)(73)))), ((int)(((byte)(74)))));
             this.inputBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.inputBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.inputBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.inputBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
-            this.inputBox.Location = new System.Drawing.Point(0, 0);
-            this.inputBox.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
+            this.inputBox.Location = new System.Drawing.Point(3, 0);
             this.inputBox.Name = "inputBox";
-            this.inputBox.Size = new System.Drawing.Size(571, 20);
+            this.inputBox.Size = new System.Drawing.Size(568, 22);
             this.inputBox.TabIndex = 0;
             this.inputBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.inputBox_KeyDown);
             // 
@@ -357,7 +372,7 @@
             // hideFinishesToolTip
             // 
             this.hideFinishesToolTip.AutoPopDelay = 15000;
-            this.hideFinishesToolTip.InitialDelay = 300;
+            this.hideFinishesToolTip.InitialDelay = 100;
             this.hideFinishesToolTip.ReshowDelay = 100;
             // 
             // hideMidraceChatToolTip
@@ -371,18 +386,6 @@
             this.forceReloadToolTip.AutoPopDelay = 15000;
             this.forceReloadToolTip.InitialDelay = 300;
             this.forceReloadToolTip.ReshowDelay = 100;
-            // 
-            // userlist
-            // 
-            this.userlist.AutoSize = true;
-            this.userlist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(63)))), ((int)(((byte)(65)))));
-            this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.userlist.Location = new System.Drawing.Point(0, 0);
-            this.userlist.Margin = new System.Windows.Forms.Padding(0);
-            this.userlist.MinimumSize = new System.Drawing.Size(100, 100);
-            this.userlist.Name = "userlist";
-            this.userlist.Size = new System.Drawing.Size(230, 400);
-            this.userlist.TabIndex = 0;
             // 
             // ChannelForm
             // 

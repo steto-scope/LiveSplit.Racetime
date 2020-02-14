@@ -15,6 +15,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using UpdateManager;
 
 /*
@@ -63,8 +64,31 @@ namespace LiveSplit.Racetime
 
         public void Join(ITimerModel model, string id)
         {
+        /*    if (model.CurrentState.Run.HasChanged)
+            {
+                try
+                {
+                    var result = MessageBox.Show("Your splits have been updated but not yet saved.\nEntering a race will reset your splits.\nDo you want to continue anyways?", "Save Splits?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (result == DialogResult.Yes)
+                    {
+                        
+                    }
+                    else 
+                    {
+                        return;
+                    }
+                }
+                catch{ }
+            }
+            model.Reset();*/
+
             var channel = new RacetimeChannel(model.CurrentState, model);
             var form = new ChannelForm(channel, id);
+        }
+
+        public void Warn()
+        {
+            
         }
 
         public void Create(ITimerModel model)

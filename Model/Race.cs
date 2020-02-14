@@ -210,7 +210,7 @@ namespace LiveSplit.Racetime.Model
 
         public bool IsParticipant(string username)
         {
-            return Entrants.Any(x => x.Name.ToLower() == username.ToLower());
+            return true;//Entrants.Any(x => x.Name.ToLower() == username?.ToLower());
         }
     }
 }
