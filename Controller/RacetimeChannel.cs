@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -447,7 +448,17 @@ cleanup:
 
         public async void Connect(string id)
         {
-            await RunAsync(id.Split('/')[1]);
+            try
+            {
+                await RunAsync(id.Split('/')[1]);
+            }
+            catch
+            {
+                RacetimeAPI.Instance.Authenticator.Reset();
+                SendSystemMessage("Access Token propably expired. Try to reauthorize", true);
+                IsConnected = false;
+                Connect(id);
+            }
         }
 
         public void Disconnect()
@@ -479,15 +490,26 @@ cleanup:
 
         }
 
+        private Regex cmdRegex = new Regex(@"^\.([a-z]+)\s*?(.+)?$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         public bool TryCreateCommand(ref string message)
         {
-            if (message.StartsWith("."))
+            Match m = cmdRegex.Match(message);
+            if (m.Success)
             {
-                int end = 1;
-                end = message.IndexOf(' ') <= 0 ? message.Length - 1 : message.IndexOf(' ') - 1;
-
-                var command = message.Substring(1, end).TrimEnd().ToLower();
-                message = "{ \"action\": \""+command+"\" }";
+                if(m.Groups.Count == 2 && m.Groups[1].Value.Trim().Length >0)
+                {
+                    message = "{ \"action\": \"" + m.Groups[1].Value.ToLower().Trim() + "\" }";
+                }
+                else if(m.Groups.Count == 3)
+                {
+                    message = "{ \"action\": \"" + m.Groups[1].Value.ToLower().Trim() + "\", \"data\":{ \"" + m.Groups[1].Value.ToLower().Trim() + "\":\"" + m.Groups[2].Value.Trim() + "\" } }";
+                }
+                else
+                {
+                    return false;
+                }
+               
                 return true;
             }
             return false;
@@ -496,6 +518,7 @@ cleanup:
         public async void SendChannelMessage(string message)
         {
             message = message.Trim();
+            message = message.Replace("\"","\\\"");
             string data = TryCreateCommand(ref message) ? message : "{ \"action\": \"message\", \"data\": { \"message\":\"" + message + "\", \"guid\":\"" + Guid.NewGuid().ToString() + "\" } }";
             ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(data));
 

@@ -452,6 +452,7 @@ namespace LiveSplit.Racetime.View
         private void saveLogButton_Click(object sender, EventArgs e)
         {
             SaveFileDialog sfd = new SaveFileDialog();
+            sfd.DefaultExt = "log";
             sfd.Filter = "Log Files (*.log)|*.*";
             DialogResult res = sfd.ShowDialog();
             if(res == DialogResult.OK)
@@ -486,6 +487,11 @@ namespace LiveSplit.Racetime.View
         private void forceReloadButton_Click(object sender, EventArgs e)
         {
             Channel.ForceReload();
+        }
+
+        private void chatBox_LinkClicked(object sender, LinkClickedEventArgs e)
+        {
+            Process.Start(e.LinkText);
         }
     }       
 }

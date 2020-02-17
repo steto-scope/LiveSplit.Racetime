@@ -212,6 +212,7 @@
             this.chatBox.Size = new System.Drawing.Size(550, 374);
             this.chatBox.TabIndex = 0;
             this.chatBox.Text = "";
+            this.chatBox.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.chatBox_LinkClicked);
             // 
             // userlist
             // 
