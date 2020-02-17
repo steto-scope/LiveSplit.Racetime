@@ -258,6 +258,8 @@ namespace LiveSplit.Racetime.View
             readyCheckBox.Checked = false;
             forceReloadButton.Enabled = false;
             saveLogButton.Enabled = false;
+            doneButton.Enabled = false;
+            doneButton.Visible = false;
         }
 
         private void Channel_StateChanged(object sender, RaceState value)
@@ -275,6 +277,8 @@ namespace LiveSplit.Racetime.View
                     readyCheckBox.Checked = false;
                     forceReloadButton.Enabled = false;
                     saveLogButton.Enabled = false;
+                    doneButton.Enabled = false;
+                    doneButton.Visible = false;
                     break;
                 case UserStatus.NotReady:
                     actionButton.Enabled = true;
@@ -283,6 +287,8 @@ namespace LiveSplit.Racetime.View
                     readyCheckBox.Checked = false;
                     forceReloadButton.Enabled = true;
                     saveLogButton.Enabled = true;
+                    doneButton.Enabled = false;
+                    doneButton.Visible = false;
                     break;
                 case UserStatus.Ready:
                     actionButton.Enabled = true;
@@ -291,6 +297,8 @@ namespace LiveSplit.Racetime.View
                     readyCheckBox.Checked = true;
                     forceReloadButton.Enabled = true;
                     saveLogButton.Enabled = true;
+                    doneButton.Enabled = false;
+                    doneButton.Visible = false;
                     break;
                 case UserStatus.Racing:
                     actionButton.Enabled = true;
@@ -299,6 +307,9 @@ namespace LiveSplit.Racetime.View
                     readyCheckBox.Checked = true;
                     forceReloadButton.Enabled = true;
                     saveLogButton.Enabled = true;
+                    doneButton.Enabled = true;
+                    doneButton.Text = "Done";
+                    doneButton.Visible = true;
                     break;
                 case UserStatus.Finished:
                 case UserStatus.Forfeit:
@@ -312,6 +323,9 @@ namespace LiveSplit.Racetime.View
                     readyCheckBox.Checked = true;
                     forceReloadButton.Enabled = true;
                     saveLogButton.Enabled = true;
+                    doneButton.Enabled = true;
+                    doneButton.Visible =true;
+                    doneButton.Text = "Add Comment";
                     break;
                 case UserStatus.Disqualified:
                     actionButton.Enabled = false;
@@ -322,6 +336,9 @@ namespace LiveSplit.Racetime.View
 
                     forceReloadButton.Enabled = false;
                     saveLogButton.Enabled = true;
+                    doneButton.Text = "Disqualified";
+                    doneButton.Visible = true;
+                    doneButton.Enabled = false;
                     break;
                 default:
                     actionButton.Enabled = false;
@@ -330,6 +347,8 @@ namespace LiveSplit.Racetime.View
                     readyCheckBox.Checked = false;
                     forceReloadButton.Enabled = false;
                     saveLogButton.Enabled = false;
+                    doneButton.Enabled = false;
+                    doneButton.Visible = false;
                     break;
             }
 
@@ -341,6 +360,8 @@ namespace LiveSplit.Racetime.View
                 readyCheckBox.Checked = false;
                 forceReloadButton.Enabled = true;
                 saveLogButton.Enabled = true;
+                doneButton.Enabled = false;
+                doneButton.Visible = false;
             }
 
             readyCheckBox.CheckedChanged += readyCheckBox_CheckedChanged;
@@ -503,6 +524,20 @@ namespace LiveSplit.Racetime.View
         private void chatBox_LinkClicked(object sender, LinkClickedEventArgs e)
         {
             Process.Start(e.LinkText);
+        }
+
+        private void doneButton_Click(object sender, EventArgs e)
+        {
+            if(Channel.Race?.State == RaceState.Started && Channel.PersonalStatus == UserStatus.Racing)
+            {
+                Channel.Done();
+            }
+            if (Channel.PersonalStatus == UserStatus.Forfeit || Channel.PersonalStatus == UserStatus.Finished)
+            {
+                inputBox.Text = ".comment ";
+                inputBox.Focus();
+                inputBox.SelectionStart = inputBox.Text.Length;
+            }
         }
     }       
 }

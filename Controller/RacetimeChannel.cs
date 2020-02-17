@@ -536,6 +536,7 @@ cleanup:
         }
 
         public void Ready() => SendChannelMessage(".ready");
+        public void Done() => SendChannelMessage(".done");
         public void Unready() => SendChannelMessage(".unready");
     }
 }
