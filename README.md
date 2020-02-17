@@ -2,7 +2,7 @@
 
 ## Usage
 
-This precompiled version already contains everything you need to use https://racetime.gg/ with LiveSplit, simply download and run: https://github.com/steto-scope/LiveSplit/releases/tag/v0.7-beta1
+This precompiled version already contains everything you need to use https://racetime.gg/ with LiveSplit, simply download and run: https://github.com/steto-scope/LiveSplit/releases/
 
 ## Building LiveSplit and the plugin
 
