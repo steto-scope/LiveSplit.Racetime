@@ -146,6 +146,7 @@ namespace LiveSplit.Racetime.Model
                     case "pending": return RaceState.Starting;
                     case "in_progress": return RaceState.Started;
                     case "finished": return RaceState.Ended;
+                    case "cancelled": return RaceState.Cancelled;
                     default: return RaceState.Unknown;
                 }
             }

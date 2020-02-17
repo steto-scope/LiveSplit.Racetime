@@ -332,6 +332,17 @@ namespace LiveSplit.Racetime.View
                     saveLogButton.Enabled = false;
                     break;
             }
+
+            if(value == RaceState.Ended || value == RaceState.Cancelled)
+            {
+                actionButton.Enabled = false;
+                actionButton.Text = "Race ended";
+                readyCheckBox.Enabled = false;
+                readyCheckBox.Checked = false;
+                forceReloadButton.Enabled = true;
+                saveLogButton.Enabled = true;
+            }
+
             readyCheckBox.CheckedChanged += readyCheckBox_CheckedChanged;
             
             inputBox.Enabled = (!(!Channel.Race.AllowNonEntrantChat && Channel.PersonalStatus == UserStatus.NotInRace) &&

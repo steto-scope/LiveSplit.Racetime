@@ -1,3 +1,5 @@
 .vs/
 bin/
 obj/
+Properties/Resources.resx
+Properties/Resources.Designer.cs
