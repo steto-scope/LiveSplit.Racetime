@@ -38,6 +38,7 @@
             this.label3 = new System.Windows.Forms.Label();
             this.infoLabel = new System.Windows.Forms.LinkLabel();
             this.chatBox = new System.Windows.Forms.RichTextBox();
+            this.userlist = new LiveSplit.Racetime.View.UserListControl();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
@@ -46,14 +47,13 @@
             this.forceReloadButton = new DarkUI.Controls.DarkButton();
             this.saveLogButton = new DarkUI.Controls.DarkButton();
             this.inputBox = new DarkUI.Controls.DarkTextBox();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.readyCheckBox = new DarkUI.Controls.DarkCheckBox();
+            this.doneButton = new DarkUI.Controls.DarkButton();
             this.actionButton = new DarkUI.Controls.DarkButton();
             this.hideFinishesToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.hideMidraceChatToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.forceReloadToolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.userlist = new LiveSplit.Racetime.View.UserListControl();
-            this.doneButton = new DarkUI.Controls.DarkButton();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -215,6 +215,18 @@
             this.chatBox.Text = "";
             this.chatBox.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.chatBox_LinkClicked);
             // 
+            // userlist
+            // 
+            this.userlist.AutoSize = true;
+            this.userlist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(63)))), ((int)(((byte)(65)))));
+            this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.userlist.Location = new System.Drawing.Point(0, 0);
+            this.userlist.Margin = new System.Windows.Forms.Padding(0);
+            this.userlist.MinimumSize = new System.Drawing.Size(100, 100);
+            this.userlist.Name = "userlist";
+            this.userlist.Size = new System.Drawing.Size(230, 400);
+            this.userlist.TabIndex = 0;
+            // 
             // splitContainer3
             // 
             this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -323,6 +335,23 @@
             this.inputBox.TabIndex = 0;
             this.inputBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.inputBox_KeyDown);
             // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel1.Controls.Add(this.readyCheckBox, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.doneButton, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.actionButton, 1, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(250, 57);
+            this.tableLayoutPanel1.TabIndex = 3;
+            // 
             // readyCheckBox
             // 
             this.readyCheckBox.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -335,6 +364,19 @@
             this.readyCheckBox.Text = "Ready";
             this.readyCheckBox.CheckedChanged += new System.EventHandler(this.readyCheckBox_CheckedChanged);
             this.readyCheckBox.Click += new System.EventHandler(this.readyCheckBox_Click);
+            // 
+            // doneButton
+            // 
+            this.doneButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.doneButton.Location = new System.Drawing.Point(93, 31);
+            this.doneButton.Margin = new System.Windows.Forms.Padding(30, 3, 30, 3);
+            this.doneButton.Name = "doneButton";
+            this.doneButton.Padding = new System.Windows.Forms.Padding(5);
+            this.doneButton.Size = new System.Drawing.Size(127, 23);
+            this.doneButton.TabIndex = 2;
+            this.doneButton.Text = "Done";
+            this.doneButton.Visible = false;
+            this.doneButton.Click += new System.EventHandler(this.doneButton_Click);
             // 
             // actionButton
             // 
@@ -366,48 +408,6 @@
             this.forceReloadToolTip.AutoPopDelay = 15000;
             this.forceReloadToolTip.InitialDelay = 300;
             this.forceReloadToolTip.ReshowDelay = 100;
-            // 
-            // userlist
-            // 
-            this.userlist.AutoSize = true;
-            this.userlist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(63)))), ((int)(((byte)(65)))));
-            this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.userlist.Location = new System.Drawing.Point(0, 0);
-            this.userlist.Margin = new System.Windows.Forms.Padding(0);
-            this.userlist.MinimumSize = new System.Drawing.Size(100, 100);
-            this.userlist.Name = "userlist";
-            this.userlist.Size = new System.Drawing.Size(230, 400);
-            this.userlist.TabIndex = 0;
-            // 
-            // doneButton
-            // 
-            this.doneButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.doneButton.Location = new System.Drawing.Point(93, 31);
-            this.doneButton.Margin = new System.Windows.Forms.Padding(30, 3, 30, 3);
-            this.doneButton.Name = "doneButton";
-            this.doneButton.Padding = new System.Windows.Forms.Padding(5);
-            this.doneButton.Size = new System.Drawing.Size(127, 23);
-            this.doneButton.TabIndex = 2;
-            this.doneButton.Text = "Done";
-            this.doneButton.Visible = false;
-            this.doneButton.Click += new System.EventHandler(this.doneButton_Click);
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.Controls.Add(this.readyCheckBox, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.doneButton, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.actionButton, 1, 0);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(250, 57);
-            this.tableLayoutPanel1.TabIndex = 3;
             // 
             // ChannelForm
             // 

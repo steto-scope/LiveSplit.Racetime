@@ -313,6 +313,7 @@ cleanup:
             if (Race == null)
             {
                 Race = msg.Race;
+                RaceChanged?.Invoke(this, new EventArgs());
                 GoalChanged?.Invoke(this, new EventArgs());
                 UserListRefreshed?.Invoke(this, new EventArgs());
                 return;
@@ -356,6 +357,7 @@ cleanup:
             }
 
             Race = msg.Race ?? Race;
+            RaceChanged?.Invoke(this, new EventArgs());
             StateChanged?.Invoke(this, Race.State);
             UserListRefreshed?.Invoke(this, new EventArgs());
             GoalChanged?.Invoke(this, new EventArgs());
@@ -434,6 +436,7 @@ cleanup:
         public event EventHandler ChannelJoined;
         public event EventHandler Disconnected;
         public event EventHandler GoalChanged;
+        public event EventHandler RaceChanged;
         public event EventHandler Kicked;
         public event EventHandler AuthenticationFailed;
         public event EventHandlerT<string> RawMessageReceived;

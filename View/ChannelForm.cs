@@ -64,6 +64,7 @@ namespace LiveSplit.Racetime.View
             Channel.RawMessageReceived += Channel_RawMessageReceived;
             Channel.RequestOutputReset += Channel_RequestOutputReset;
             Channel.Disconnected += Channel_Disconnected;
+            Channel.RaceChanged += Channel_RaceChanged;
             Channel.Authorized += Channel_Authorized;
             
 
@@ -71,11 +72,16 @@ namespace LiveSplit.Racetime.View
             DownloadAllEmotes();
             TopMost = alwaysOnTop;
             Show();
-            Text = channelId.Substring(channelId.IndexOf('/')+1);
+            Text = "Connecting to "+channelId.Substring(channelId.IndexOf('/')+1);
             SetInitialState();
             actionButton.Enabled = false;
             Channel.Connect(channelId);
             infoLabel.LinkClicked += (ss, args) => { if (urlPattern.IsMatch(infoLabel.Text)) Process.Start(infoLabel.Text.Substring(args.Link.Start,args.Link.Length)); };
+        }
+
+        private void Channel_RaceChanged(object sender, EventArgs e)
+        {
+            Text = $"{Channel.Race.Goal} [{Channel.Race.GameName}] - {Channel.Race.ChannelName}";
         }
 
         private void Channel_Authorized(object sender, EventArgs e)
@@ -110,6 +116,7 @@ namespace LiveSplit.Racetime.View
         {
             if(!IsDisposed)
             {
+                Text = "Disconnected";
                 SetInitialState();
                 forceReloadButton.Enabled = false;
                 actionButton.Enabled = true;
@@ -467,6 +474,7 @@ namespace LiveSplit.Racetime.View
             Channel.GoalChanged -= Channel_GoalChanged;
             Channel.MessageReceived -= Channel_ChatUpdate;
             Channel.Authorized -= Channel_Authorized;
+            Channel.RaceChanged -= Channel_RaceChanged;
 
             Channel.Disconnect();
         }

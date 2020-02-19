@@ -55,7 +55,7 @@ namespace LiveSplit.Racetime.Model
                 return Data.allow_comments;
             }
         }
-        public string ChannelName
+        public string GameSlug
         {
             get
             {
@@ -129,7 +129,7 @@ namespace LiveSplit.Racetime.Model
                 }
             }
         }
-        public string GameSlug
+        public string ChannelName
         {
             get
             {
