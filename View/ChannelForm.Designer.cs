@@ -38,7 +38,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.infoLabel = new System.Windows.Forms.LinkLabel();
             this.chatBox = new System.Windows.Forms.RichTextBox();
-            this.userlist = new LiveSplit.Racetime.View.UserListControl();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
@@ -54,6 +53,7 @@
             this.hideFinishesToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.hideMidraceChatToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.forceReloadToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this.userlist = new LiveSplit.Racetime.View.UserListControl();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -112,7 +112,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.AutoScroll = true;
-            this.splitContainer2.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.splitContainer2.Panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(63)))), ((int)(((byte)(65)))));
             this.splitContainer2.Panel2.Controls.Add(this.userlist);
             this.splitContainer2.Size = new System.Drawing.Size(784, 400);
             this.splitContainer2.SplitterDistance = 550;
@@ -215,18 +215,6 @@
             this.chatBox.Text = "";
             this.chatBox.LinkClicked += new System.Windows.Forms.LinkClickedEventHandler(this.chatBox_LinkClicked);
             // 
-            // userlist
-            // 
-            this.userlist.AutoSize = true;
-            this.userlist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(63)))), ((int)(((byte)(65)))));
-            this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.userlist.Location = new System.Drawing.Point(0, 0);
-            this.userlist.Margin = new System.Windows.Forms.Padding(0);
-            this.userlist.MinimumSize = new System.Drawing.Size(100, 100);
-            this.userlist.Name = "userlist";
-            this.userlist.Size = new System.Drawing.Size(230, 400);
-            this.userlist.TabIndex = 0;
-            // 
             // splitContainer3
             // 
             this.splitContainer3.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -288,6 +276,7 @@
             this.hideFinishesCheckBox.Text = "Hide Results";
             this.hideFinishesToolTip.SetToolTip(this.hideFinishesCheckBox, "Hides all information that could reveal finishes or forfeits until you finish or " +
         "forfeit yourself");
+            this.hideFinishesCheckBox.CheckedChanged += new System.EventHandler(this.hideFinishesCheckBox_CheckedChanged);
             // 
             // hideChatCheckBox
             // 
@@ -409,6 +398,18 @@
             this.forceReloadToolTip.InitialDelay = 300;
             this.forceReloadToolTip.ReshowDelay = 100;
             // 
+            // userlist
+            // 
+            this.userlist.AutoSize = true;
+            this.userlist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(63)))), ((int)(((byte)(65)))));
+            this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.userlist.Location = new System.Drawing.Point(0, 0);
+            this.userlist.Margin = new System.Windows.Forms.Padding(0);
+            this.userlist.MinimumSize = new System.Drawing.Size(100, 100);
+            this.userlist.Name = "userlist";
+            this.userlist.Size = new System.Drawing.Size(230, 400);
+            this.userlist.TabIndex = 0;
+            // 
             // ChannelForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -417,6 +418,7 @@
             this.Controls.Add(this.splitContainer1);
             this.MinimumSize = new System.Drawing.Size(600, 400);
             this.Name = "ChannelForm";
+            this.ShowIcon = false;
             this.Text = "ChannelWindow";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ChannelForm_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ChannelForm_FormClosed);

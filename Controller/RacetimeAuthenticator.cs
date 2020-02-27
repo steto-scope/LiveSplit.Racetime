@@ -89,8 +89,11 @@ namespace LiveSplit.Racetime.Controller
             string reqState, state, verifier = null, challenge, request, response;
             TcpListener localEndpoint = null;
 
-            if (RefreshToken != null)
+            if (RefreshToken != null && forceRefresh)
+            {
+                AccessToken = null;
                 goto reauthorize;
+            }
 
 reauthenticate:            
 
@@ -160,14 +163,21 @@ reauthenticate:
 
 reauthorize:
             //Step 2: Getting authorized     
-            request = $"code={Code}&redirect_uri={RedirectUri}&client_id={s.ClientID}&code_verifier={verifier}&client_secret={s.ClientSecret}" + (!IsRefreshRequired ? $"&scope={s.Scopes}&grant_type=authorization_code" : $"&refresh_token={RefreshToken}&grant_type=refresh_token");
+            request = $"code={Code}&redirect_uri={RedirectUri}&client_id={s.ClientID}&code_verifier={verifier}&client_secret={s.ClientSecret}" + (AccessToken==null&&RefreshToken!=null ? $"&refresh_token={RefreshToken}&grant_type=refresh_token" : $"&scope={s.Scopes}&grant_type=authorization_code");
             
             var result = await RestRequest(s.TokenEndpoint, request);
+            if (result.Item1 == 400)
+            {
+                RefreshToken = null;
+                Error = "Access has been revoked. Reauthentication required";
+                goto failure;
+            }
             if (result.Item1 != 200)
             {
                 Error = "Authentication successful, but access wasn't granted by the server";
                 goto failure;
             }
+           
 
             AccessToken = result.Item2.access_token;
             RefreshToken = result.Item2.refresh_token;
@@ -256,8 +266,15 @@ failure:
                 if (ex.Status == WebExceptionStatus.ProtocolError)
                 {
                     WebResponse response = ex.Response as HttpWebResponse;
-                    var r = JSON.FromResponse(response);
-                    return new Tuple<int, dynamic>(400, r);                    
+                    try
+                    {
+                        var r = JSON.FromResponse(response);
+                        return new Tuple<int, dynamic>(400, r);
+                    }
+                    catch
+                    {
+                        return new Tuple<int, dynamic>(500, null);
+                    }
                 }                
             }
             catch

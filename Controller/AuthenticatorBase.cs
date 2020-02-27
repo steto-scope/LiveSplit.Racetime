@@ -57,14 +57,6 @@ namespace LiveSplit.Racetime.Controller
             }
         }
 
-        public bool IsRefreshRequired
-        {
-            get
-            {
-                return IsAuthorized && (DateTime.Now > TokenExpireDate);
-            }
-        }
-
         public void Reset()
         {
             Code = null;

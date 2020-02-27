@@ -130,7 +130,7 @@ namespace LiveSplit.Racetime.View
 
         private void Channel_RawMessageReceived(object sender, string value)
         {
-            Console.WriteLine(value);
+            //chatBox.AppendText(value);
         }
 
         private void Channel_ChatUpdate(object sender, IEnumerable<ChatMessage> chatMessages)
@@ -317,6 +317,8 @@ namespace LiveSplit.Racetime.View
                     doneButton.Enabled = true;
                     doneButton.Text = "Done";
                     doneButton.Visible = true;
+                    if (hideFinishesCheckBox.Checked)
+                        userlist.Visible = false;
                     break;
                 case UserStatus.Finished:
                 case UserStatus.Forfeit:
@@ -332,7 +334,8 @@ namespace LiveSplit.Racetime.View
                     saveLogButton.Enabled = true;
                     doneButton.Enabled = true;
                     doneButton.Visible =true;
-                    doneButton.Text = "Add Comment";
+                    doneButton.Text = "Set Comment";
+                    userlist.Visible = true;
                     break;
                 case UserStatus.Disqualified:
                     actionButton.Enabled = false;
@@ -346,6 +349,7 @@ namespace LiveSplit.Racetime.View
                     doneButton.Text = "Disqualified";
                     doneButton.Visible = true;
                     doneButton.Enabled = false;
+                    userlist.Visible = true;
                     break;
                 default:
                     actionButton.Enabled = false;
@@ -393,29 +397,30 @@ namespace LiveSplit.Racetime.View
             {
                 default:
                 case UserStatus.NotInRace:
-                    Channel.SendChannelMessage(".enter");
+                    Channel.Enter();
                     break;
                 case UserStatus.NotReady:
                 case UserStatus.Ready:
-                    Channel.SendChannelMessage(".quit");
+                    Channel.Quit();
                     break;
                 case UserStatus.Racing:
                     r = MessageBox.Show("Are you sure that you want forfeit this race?", "", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (r == DialogResult.Yes)
-                        Channel.SendChannelMessage(".forfeit");
+                        Channel.Forfeit();
                     else
                         Channel_StateChanged(sender, Channel.Race.State);
                     break;               
                 
                 case UserStatus.Finished:
-                    r = MessageBox.Show("You are already done. Are you sure?", "", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    Channel.Undone();
+                    /*r = MessageBox.Show("You are already done. Are you sure?", "", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (r == DialogResult.Yes)
                         Channel.SendChannelMessage(".undone");
                     else
-                        Channel_StateChanged(sender, Channel.Race.State);
+                        Channel_StateChanged(sender, Channel.Race.State);*/
                     break;
                 case UserStatus.Forfeit:
-                    Channel.SendChannelMessage(".undone");
+                    Channel.Undone();
                     break;
             }
         }
@@ -546,6 +551,11 @@ namespace LiveSplit.Racetime.View
                 inputBox.Focus();
                 inputBox.SelectionStart = inputBox.Text.Length;
             }
+        }
+
+        private void hideFinishesCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+
         }
     }       
 }
