@@ -56,6 +56,8 @@ namespace LiveSplit.Racetime.Controller
             }
         }
 
+        public bool IsAuthorizing { get; set; }
+
         public void Reset()
         {
             Code = null;
@@ -140,105 +142,75 @@ namespace LiveSplit.Racetime.Controller
             base64 = base64.Replace("=", "");
             return base64;
         }
-               
 
-        public async Task<bool> Authorize(bool forceRefresh = false)
+        private bool TryGetUserInfo()
         {
-            //token refresh currently not implemented 
-
-            Error = null;
-            string reqState, state, verifier = null, challenge, request, response;
-            TcpListener localEndpoint = null;
-
-            if (RefreshToken != null && forceRefresh)
+            //try to get the userinfo. if that works we are already authenticated and authorized
+            if (AccessToken != null)
             {
-                AccessToken = null;
-                goto reauthorize;
+                try
+                {
+                    Identity = GetUserInfo(s, AccessToken);
+                    return Identity != null;
+                }
+                catch
+                {
+                    AccessToken = null;
+                    return false;
+                }
             }
+            return false;
+        }
 
-reauthenticate:            
-
-            //Step 1: Getting authenticated
-            reqState = null;
-            state = GenerateRandomBase64Data(32);
+        private async Task<bool> TryRefreshAccess()
+        {
+            string request, verifier;
+            Tuple<int, dynamic> result;
             verifier = GenerateRandomBase64Data(32);
-            challenge = SHA256(verifier);
 
-            localEndpoint = new TcpListener(s.RedirectAddress, s.RedirectPort);
-            localEndpoint.Start();
-
-            request = $"{s.AuthServer}{s.AuthorizationEndpoint}?response_type=code&client_id={s.ClientID}&scope={s.Scopes}&redirect_uri={RedirectUri}&state={state}&code_challenge={challenge}&code_challenge_method={s.ChallengeMethod}";
-                
-
-            System.Diagnostics.Process.Start(request);
-
-            using (TcpClient serverConnection = await localEndpoint.AcceptTcpClientAsync())
+            if (RefreshToken != null)
             {
-                response = ReadResponse(serverConnection);
-                
-                localEndpoint.Stop();
-                localEndpoint.Server.Close();
-                localEndpoint = null;
+                request = $"code={Code}&redirect_uri={RedirectUri}&client_id={s.ClientID}&code_verifier={verifier}&client_secret={s.ClientSecret}&refresh_token={RefreshToken}&grant_type=refresh_token";
 
-                foreach (Match m in parameterRegex.Matches(response))
+                result = await RestRequest(s.TokenEndpoint, request);
+                if (result.Item1 == 200)
                 {
-                    switch (m.Groups[1].Value)
-                    {
-                        case "state": reqState = m.Groups[2].Value; break;
-                        case "code": Code = m.Groups[2].Value; break;
-                        case "error": Error = m.Groups[2].Value; break;
-                    }
+                    AccessToken = result.Item2.access_token;
+                    RefreshToken = result.Item2.refresh_token;
+                    return true;
                 }
-
-                if (Error != null)
+                else
                 {
-                    if (Error == "invalid_token" && RefreshToken != null)
-                    {
-                        Error = "Access Token expired";
-                        goto failure;
-                    }
-                    else
-                    {
-                        await SendRedirectAsync(serverConnection, s.FailureEndpoint);
-                        Error = "Unable to authenticate: The server rejected the request";
-                        goto failure;
-                    }
+                    //refresh hasn't worked
+                    RefreshToken = null;
                 }
-
-                if (state != reqState)
-                {
-                    await SendRedirectAsync(serverConnection, s.FailureEndpoint);
-                    Error = "Unable to authenticate: The server hasn't responded correctly. Possible protocol error";
-                    goto failure;
-                }
-
-                await SendRedirectAsync(serverConnection, s.SuccessEndpoint);
-                serverConnection.Close();
             }
-            if (localEndpoint != null)
-            {
-                localEndpoint.Stop();
-                localEndpoint.Server.Close();
-                localEndpoint = null;
-            }
+            return false;
+        }
 
-reauthorize:
+        private async Task<bool> TryGetAccess()
+        {
+            string request, verifier;
+            Tuple<int, dynamic> result;
+            verifier = GenerateRandomBase64Data(32);
+
+
             //Step 2: Getting authorized     
-            request = $"code={Code}&redirect_uri={RedirectUri}&client_id={s.ClientID}&code_verifier={verifier}&client_secret={s.ClientSecret}" + (AccessToken==null&&RefreshToken!=null ? $"&refresh_token={RefreshToken}&grant_type=refresh_token" : $"&scope={s.Scopes}&grant_type=authorization_code");
-            
-            var result = await RestRequest(s.TokenEndpoint, request);
+            request = $"code={Code}&redirect_uri={RedirectUri}&client_id={s.ClientID}&code_verifier={verifier}&client_secret={s.ClientSecret}&scope={s.Scopes}&grant_type=authorization_code";
+
+            result = await RestRequest(s.TokenEndpoint, request);
             if (result.Item1 == 400)
             {
                 RefreshToken = null;
                 Error = "Access has been revoked. Reauthentication required";
-                goto failure;
+                return false;
             }
             if (result.Item1 != 200)
             {
                 Error = "Authentication successful, but access wasn't granted by the server";
-                goto failure;
+                return false;
             }
-           
+
 
             AccessToken = result.Item2.access_token;
             RefreshToken = result.Item2.refresh_token;
@@ -247,40 +219,158 @@ reauthorize:
             if (AccessToken == null || RefreshToken == null)
             {
                 Error = "Final access check failed. Server responded with success, but hasn't delivered a valid Token.";
-                goto failure;
+                return false;
             }
+            return true;
+        }
 
+        private async Task<bool> TryGetAuthenticated()
+        {
+            string reqState, state, verifier = null, challenge, request, response;
+            Tuple<int, dynamic> result;
+            TcpListener localEndpoint = null;
 
+            Error = null;
+            reqState = null;
+            state = GenerateRandomBase64Data(32);
+            verifier = GenerateRandomBase64Data(32);
+            challenge = SHA256(verifier);
 
-            //Step 3: Update User Information       
             try
             {
-                Identity = GetUserInfo(s, AccessToken);
-                if(Identity == null)
+                localEndpoint = new TcpListener(s.RedirectAddress, s.RedirectPort);
+                localEndpoint.Start();
+
+                request = $"{s.AuthServer}{s.AuthorizationEndpoint}?response_type=code&client_id={s.ClientID}&scope={s.Scopes}&redirect_uri={RedirectUri}&state={state}&code_challenge={challenge}&code_challenge_method={s.ChallengeMethod}";
+
+
+                System.Diagnostics.Process.Start(request);
+
+                using (TcpClient serverConnection = await localEndpoint.AcceptTcpClientAsync())
                 {
-                    Error = "Access denied. Reauthorizing required.";
-                    AccessToken = null;
-                    RefreshToken = null;
-                    goto failure;
+                    response = ReadResponse(serverConnection);
+
+                    localEndpoint.Stop();
+                    localEndpoint.Server.Close();
+                    localEndpoint = null;
+
+                    foreach (Match m in parameterRegex.Matches(response))
+                    {
+                        switch (m.Groups[1].Value)
+                        {
+                            case "state": reqState = m.Groups[2].Value; break;
+                            case "code": Code = m.Groups[2].Value; break;
+                            case "error": Error = m.Groups[2].Value; break;
+                        }
+                    }
+
+                    if (Error != null)
+                    {
+                        if (Error == "invalid_token" && RefreshToken != null)
+                        {
+                            Error = "Access Token expired";
+                            return false;
+                        }
+                        else
+                        {
+                            await SendRedirectAsync(serverConnection, s.FailureEndpoint);
+                            Error = "Unable to authenticate: The server rejected the request";
+                            return false;
+                        }
+                    }
+
+                    if (state != reqState)
+                    {
+                        await SendRedirectAsync(serverConnection, s.FailureEndpoint);
+                        Error = "Unable to authenticate: The server hasn't responded correctly. Possible protocol error";
+                        return false;
+                    }
+
+                    await SendRedirectAsync(serverConnection, s.SuccessEndpoint);
+                    serverConnection.Close();
                 }
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                Error = "Access has been granted, but retrieving User Information failed";
+                Error = "Unknown Error";
+            }
+            finally
+            {
+                if (localEndpoint != null)
+                {
+                    localEndpoint.Stop();
+                    localEndpoint.Server.Close();
+                    localEndpoint = null;
+                }
+            }
+            
+
+            return Error == null;
+        }
+
+
+        public async Task<bool> Authorize()
+        {
+            if (IsAuthorizing)
+                return false;
+
+            IsAuthorizing = true;
+            Error = null;
+            bool secondRun = false;
+
+        start:
+            //1st: Try to get User information
+            try
+            {
+                if (TryGetUserInfo())
+                    goto success;
+            }
+            catch { }
+
+            //2nd: if this fails, try to renew access 
+            try
+            {
+                //if there is a refresh token
+                if (await TryRefreshAccess())
+                    goto start;
+            
+                //or not
+                if (await TryGetAccess())
+                    goto start;
+            }
+            catch { }
+
+            //3rd: everyrthing failed, ask the user to authenticate
+            try
+            {
+                if (await TryGetAuthenticated())
+                {
+                    goto start;
+                }
+                else
+                {
+                    if (Error != null && Error.Contains("rejected")) //user cancelled the request
+                        goto failure;
+                }
+            }
+            catch { }
+
+            //safety safe for a theoretical endless loop
+            if (secondRun)
                 goto failure;
-            }
+            secondRun = true;
 
-            return true;
+            if(Error == null)
+                goto start;
 
 
-failure:
-            if(localEndpoint !=null)
-            {
-                localEndpoint.Stop();
-                localEndpoint = null;
-            }
+       failure:
+            IsAuthorizing = false;
             Reset();
             return false;
+        success:
+            IsAuthorizing = false;
+            return true;
         }
 
         public RacetimeUser GetUserInfo(IAuthentificationSettings s, string AccessToken)

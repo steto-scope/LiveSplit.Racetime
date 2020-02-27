@@ -80,7 +80,7 @@ namespace LiveSplit.Racetime.Controller
 
         private async void Reconnect()
         {
-            if (ConnectionError && Race != null)
+            if (ConnectionError && Race != null && !RacetimeAPI.Instance.Authenticator.IsAuthorizing)
             {
                 Connect(Race.Id);
             }
@@ -152,9 +152,7 @@ namespace LiveSplit.Racetime.Controller
 
             var errormsg = chatmessages.FirstOrDefault(x => x.Type == MessageType.Error)?.Message;
             if (errormsg != null && string.Join("", errormsg).Contains("Permission denied"))
-            {
-                RacetimeAPI.Instance.Authenticator.AccessToken = null;
-                RacetimeAPI.Instance.Authenticator.RefreshToken = null;
+            {                
                 ForceReload();
                 return true;
             }
@@ -172,7 +170,6 @@ namespace LiveSplit.Racetime.Controller
         {
             if (IsConnected)
             {
-                SendSystemMessage("WebSocket is already open");
                 return;
             }
             websocket_cts = new CancellationTokenSource();
@@ -199,7 +196,7 @@ namespace LiveSplit.Racetime.Controller
                 }
                 else
                 {
-                    ((RacetimeAuthenticator)Authenticator).UpdateUserInfo();
+                    Authenticator.UpdateUserInfo();
                 }
                 //opening the socket
                 ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
@@ -473,23 +470,24 @@ namespace LiveSplit.Racetime.Controller
         {
             try
             {
+                await RacetimeAPI.Instance.Authenticator.Authorize();
                 await RunAsync(id.Split('/')[1]);
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("403"))
+               /* if (ex.Message.Contains("403"))
                 {
                     //RacetimeAPI.Instance.Authenticator.Reset();
-                    if (await RacetimeAPI.Instance.Authenticator.Authorize(true))
+                    if (await RacetimeAPI.Instance.Authenticator.Authorize())
                     {
                         Connect(id);
                         return;
                     }
                     else
-                        SendSystemMessage("Unable to gain access. Reauthentication required", true);
-
+                        SendSystemMessage("Unable to authorize", true);
+                        */
                     //SendSystemMessage("Access Token expired. Reauthorization required", true);
-                }
+                //}
 
                 IsConnected = false;
                 Connect(id);
