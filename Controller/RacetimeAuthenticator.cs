@@ -14,12 +14,73 @@ using System.Threading.Tasks;
 namespace LiveSplit.Racetime.Controller
 {
 
-    internal class RacetimeAuthenticator : AuthenticatorBase
+    internal class RacetimeAuthenticator
     {
-        public RacetimeAuthenticator(IAuthentificationSettings s)
-            : base(s)
+        protected readonly IAuthentificationSettings s;
+        
+        protected string Code { get; set; }
+        protected string RedirectUri
         {
+            get
+            {
+                return $"http://{s.RedirectAddress}:{s.RedirectPort}/";
+            }
+        }
 
+
+        public string AccessToken
+        {
+            get { return CredentialManager.ReadCredential("LiveSplit_racetimegg_accesstoken")?.Password; }
+            set { CredentialManager.WriteCredential("LiveSplit_racetimegg_accesstoken", "", value); }
+        }
+        public string RefreshToken
+        {
+            get { return CredentialManager.ReadCredential("LiveSplit_racetimegg_refreshtoken")?.Password; }
+            set { CredentialManager.WriteCredential("LiveSplit_racetimegg_refreshtoken", "", value); }
+        }
+        public RacetimeUser Identity { get; protected set; }
+        public string Error { get; protected set; }
+        public DateTime TokenExpireDate { get; protected set; }
+        public bool IsAuthenticated
+        {
+            get
+            {
+                return Code != null;
+            }
+        }
+        public bool IsAuthorized
+        {
+            get
+            {
+                return (AccessToken != null);
+            }
+        }
+
+        public void Reset()
+        {
+            Code = null;
+            AccessToken = null;
+            RefreshToken = null;
+            TokenExpireDate = DateTime.MaxValue;
+        }
+
+        protected async Task<bool> SendRedirectAsync(TcpClient client, string target)
+        {
+            await Task.Run(() =>
+            {
+                using (var writer = new StreamWriter(client.GetStream(), new UTF8Encoding(false)))
+                {
+                    writer.WriteLine("HTTP/1.0 301 Moved Permanently");
+                    writer.WriteLine($"Location: {s.AuthServer}{target}");
+                }
+            });
+            return true;
+        }
+        
+
+        public RacetimeAuthenticator(IAuthentificationSettings s)
+        {
+            this.s = s;
         }
 
         private readonly Regex parameterRegex = new Regex(@"(\w+)=([-_A-Z0-9]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -81,7 +142,7 @@ namespace LiveSplit.Racetime.Controller
         }
                
 
-        public override async Task<bool> Authorize(bool forceRefresh = false)
+        public async Task<bool> Authorize(bool forceRefresh = false)
         {
             //token refresh currently not implemented 
 

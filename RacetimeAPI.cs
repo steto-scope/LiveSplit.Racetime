@@ -56,7 +56,7 @@ namespace LiveSplit.Racetime
 
         public IEnumerable<Race> Races { get; set; }
 
-        public AuthenticatorBase Authenticator { get; set; }
+        internal RacetimeAuthenticator Authenticator { get; set; }
 
         public override string ProviderName => "racetime.gg";
 

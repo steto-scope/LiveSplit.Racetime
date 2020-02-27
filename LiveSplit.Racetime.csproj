@@ -56,7 +56,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controller\AuthenticatorBase.cs" />
     <Compile Include="Controller\IAuthentificationSettings.cs" />
     <Compile Include="Controller\RacetimeChannel.cs" />
     <Compile Include="Controller\RacetimeAuthenticator.cs" />
