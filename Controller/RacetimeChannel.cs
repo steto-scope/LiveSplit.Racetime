@@ -473,8 +473,10 @@ start:
 
         public void Forfeit()
         {
-            SendChannelMessage(".forfeit");
-            Model.Reset();
+            if (PersonalStatus == UserStatus.Racing)
+            {
+                SendChannelMessage(".forfeit");
+            }
         }
 
         public void RemoveRaceComparisons()
