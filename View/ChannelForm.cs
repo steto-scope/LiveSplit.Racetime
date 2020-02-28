@@ -95,7 +95,7 @@ namespace LiveSplit.Racetime.View
             {
                 try
                 {
-                    this.InvokeIfRequired(TwitchEmoteResolver.DownloadTwitchEmotesList);
+                    InvokeIfRequired(TwitchEmoteResolver.DownloadTwitchEmotesList);
                 }
                 catch (Exception ex)
                 {
@@ -130,7 +130,7 @@ namespace LiveSplit.Racetime.View
 
         private void Channel_RawMessageReceived(object sender, string value)
         {
-            //chatBox.AppendText(value);
+
         }
 
         private void Channel_ChatUpdate(object sender, IEnumerable<ChatMessage> chatMessages)
@@ -413,11 +413,6 @@ namespace LiveSplit.Racetime.View
                 
                 case UserStatus.Finished:
                     Channel.Undone();
-                    /*r = MessageBox.Show("You are already done. Are you sure?", "", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    if (r == DialogResult.Yes)
-                        Channel.SendChannelMessage(".undone");
-                    else
-                        Channel_StateChanged(sender, Channel.Race.State);*/
                     break;
                 case UserStatus.Forfeit:
                     Channel.Undone();

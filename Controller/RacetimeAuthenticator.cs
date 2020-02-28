@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -62,7 +63,6 @@ namespace LiveSplit.Racetime.Controller
         {
             Code = null;
             AccessToken = null;
-            RefreshToken = null;
             TokenExpireDate = DateTime.MaxValue;
         }
 
@@ -153,8 +153,12 @@ namespace LiveSplit.Racetime.Controller
                     Identity = GetUserInfo(s, AccessToken);
                     return Identity != null;
                 }
-                catch
+                catch(Exception ex)
                 {
+
+                    if (ex.InnerException is SocketException)
+                        throw;
+
                     AccessToken = null;
                     return false;
                 }
@@ -179,11 +183,6 @@ namespace LiveSplit.Racetime.Controller
                     RefreshToken = result.Item2.refresh_token;
                     return true;
                 }
-                else
-                {
-                    //refresh hasn't worked
-                    RefreshToken = null;
-                }
             }
             return false;
         }
@@ -195,13 +194,11 @@ namespace LiveSplit.Racetime.Controller
             verifier = GenerateRandomBase64Data(32);
 
 
-            //Step 2: Getting authorized     
             request = $"code={Code}&redirect_uri={RedirectUri}&client_id={s.ClientID}&code_verifier={verifier}&client_secret={s.ClientSecret}&scope={s.Scopes}&grant_type=authorization_code";
 
             result = await RestRequest(s.TokenEndpoint, request);
             if (result.Item1 == 400)
             {
-                RefreshToken = null;
                 Error = "Access has been revoked. Reauthentication required";
                 return false;
             }
@@ -319,12 +316,33 @@ namespace LiveSplit.Racetime.Controller
             bool secondRun = false;
 
         start:
+
+            //0th:  ping server to check connectivity
+            string host = Properties.Resources.DOMAIN.Contains(":") ? Properties.Resources.DOMAIN.Substring(0, Properties.Resources.DOMAIN.IndexOf(':')) : Properties.Resources.DOMAIN;
+            try
+            {
+                Ping myPing = new Ping();
+                byte[] buffer = new byte[32];
+                int timeout = 1000;
+                PingOptions pingOptions = new PingOptions();
+                PingReply reply = myPing.Send(host, timeout, buffer, pingOptions);
+                if (reply.Status != IPStatus.Success)
+                    throw new Exception();
+            }
+            catch (Exception)
+            {
+                Error = $"No Connection to {host}";
+                goto failure;
+            }
+
+
             //1st: Try to get User information
             try
             {
                 if (TryGetUserInfo())
                     goto success;
             }
+            catch(SocketException sex) { goto failure; }
             catch { }
 
             //2nd: if this fails, try to renew access 

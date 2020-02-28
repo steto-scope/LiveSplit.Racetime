@@ -18,19 +18,10 @@ namespace LiveSplit.Racetime.Controller
 {
     public class RacetimeChannel
     {
-        public static async Task RunPeriodically(Action action, TimeSpan period, CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(period, cancellationToken);
-
-                if (!cancellationToken.IsCancellationRequested)
-                    action();
-            }
-        }
 
         public const int bufferSize = 20480;
         public const int maxBufferSize = 2097152;
+        public readonly int[] reconnectDelays = {0, 5, 5, 10, 10, 10, 15};
 
         public string FullWebRoot => string.Format("{0}://{1}/", Properties.Resources.PROTOCOL_REST, Properties.Resources.DOMAIN);
         public string FullSocketRoot => string.Format("{0}://{1}/", Properties.Resources.PROTOCOL_WEBSOCKET, Properties.Resources.DOMAIN);
@@ -50,7 +41,7 @@ namespace LiveSplit.Racetime.Controller
 
         private ClientWebSocket ws;
         protected List<ChatMessage> log = new List<ChatMessage>();
-        public bool ConnectionError { get; set; }
+        public int ConnectionError { get; set; }
         public bool IsConnected { get; set; }
 
 
@@ -62,8 +53,6 @@ namespace LiveSplit.Racetime.Controller
         {
 
             reconnect_cts = new CancellationTokenSource();
-            RunPeriodically(() => Reconnect(), new TimeSpan(0, 0, 10), reconnect_cts.Token);
-
 
             Model = model;
 
@@ -80,7 +69,7 @@ namespace LiveSplit.Racetime.Controller
 
         private async void Reconnect()
         {
-            if (ConnectionError && Race != null && !RacetimeAPI.Instance.Authenticator.IsAuthorizing)
+            if (ConnectionError>=0 && Race != null && !RacetimeAPI.Instance.Authenticator.IsAuthorizing)
             {
                 Connect(Race.Id);
             }
@@ -168,6 +157,7 @@ namespace LiveSplit.Racetime.Controller
 
         public async Task RunAsync(string id)
         {
+start:
             if (IsConnected)
             {
                 return;
@@ -179,24 +169,17 @@ namespace LiveSplit.Racetime.Controller
             {
                 IsConnected = true;
 
-                //authorize user if needed
-                if (Authenticator.AccessToken == null)
+                if (await Authenticator.Authorize())
                 {
-                    if (await Authenticator.Authorize())
-                    {
-                        SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
-                        Authorized?.Invoke(this, null);
-                    }
-                    else
-                    {
-                        SendSystemMessage(Authenticator.Error, true);
-                        AuthenticationFailed?.Invoke(this, new EventArgs());
-                        goto cleanup;
-                    }
+                    SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
+                    Authorized?.Invoke(this, null);
                 }
                 else
                 {
-                    Authenticator.UpdateUserInfo();
+                    SendSystemMessage(Authenticator.Error, true);
+                    AuthenticationFailed?.Invoke(this, new EventArgs());
+                    ConnectionError++;
+                    goto cleanup;
                 }
                 //opening the socket
                 ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
@@ -206,6 +189,7 @@ namespace LiveSplit.Racetime.Controller
                 }
                 catch (WebSocketException wex)
                 {
+                    ConnectionError++;
                     goto cleanup;
                 }
 
@@ -239,7 +223,7 @@ namespace LiveSplit.Racetime.Controller
                     {
                         var rf = new StandardComparisonGeneratorsFactory();
 
-                        if (!ConnectionError) //don't load after every reconnect
+                        if (ConnectionError>=0) //don't load after every reconnect
                         {
                             SendSystemMessage("Loading chat history...");
                             ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
@@ -254,7 +238,7 @@ namespace LiveSplit.Racetime.Controller
                     }
                 }
 
-                ConnectionError = false;
+                ConnectionError = -1;
 
                 while (ws.State == WebSocketState.Open && !websocket_cts.IsCancellationRequested)
                 {
@@ -275,22 +259,31 @@ namespace LiveSplit.Racetime.Controller
                     case WebSocketState.CloseSent:
                     case WebSocketState.CloseReceived:
                     case WebSocketState.Closed:
-                        ConnectionError = false;
+                        ConnectionError = -1;
                         break;
                     default:
                     case WebSocketState.Aborted:
-                        ConnectionError = true;
+                        if(!websocket_cts.IsCancellationRequested)
+                            ConnectionError++;
 
                         break;
                 }
             }
 
         cleanup:
-            SendSystemMessage("Disconnect");
-            if (ConnectionError)
-                SendSystemMessage("Reconnecting...");
-            websocket_cts.Dispose();
             IsConnected = false;
+
+            if (ConnectionError >= 0)
+            {
+                SendSystemMessage($"Auto-reconnect in {reconnectDelays[Math.Min(reconnectDelays.Length-1,ConnectionError)]}s...");
+                await Task.Delay(reconnectDelays[Math.Min(reconnectDelays.Length - 1, ConnectionError)] * 1000);
+                goto start;
+            }
+            else
+                SendSystemMessage("Disconnect");
+
+            websocket_cts.Dispose();
+            
             Disconnected?.Invoke(this, new EventArgs());
 
         }
@@ -299,7 +292,6 @@ namespace LiveSplit.Racetime.Controller
         {
             if (IsConnected)
             {
-                //Model.Reset();
                 ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
                 ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
                 await ReceiveAndProcess();
@@ -324,11 +316,11 @@ namespace LiveSplit.Racetime.Controller
 
             switch (msg.Race?.State)
             {
-                case Racetime.Model.RaceState.Starting:
+                case RaceState.Starting:
                     Model.CurrentState.Run.Offset = -msg.Race.StartDelay;
                     Model.Start();
                     break;
-                case Racetime.Model.RaceState.Cancelled:
+                case RaceState.Cancelled:
                     Model.Reset();
                     break;
             }
@@ -362,8 +354,6 @@ namespace LiveSplit.Racetime.Controller
                     break;
                 case UserStatus.Finished:
                     Model.Split();
-
-                    //Model.CurrentState.Run.Offset = msg.User.FinishedAt - msg.Race.StartedAt;
                     break;
                 case UserStatus.Forfeit:
                     Model.Reset();
@@ -424,23 +414,8 @@ namespace LiveSplit.Racetime.Controller
         {
             if (Model.CurrentState.CurrentSplitIndex == Model.CurrentState.Run.Count - 1)
             {
-                /* if (PersonalStatus == UserStatus.Finished)
-                 {
-
-                     if (MessageBox.Show("Are you sure that you want to undone your already finished race?", "", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
-                     {
-                         SendChannelMessage(".undone");
-                     }
-                     else
-                     {
-                         ForceReload();
-                     }
-                 }
-                 else
-                 {*/
                  if(PersonalStatus != UserStatus.Racing)
-                    SendChannelMessage(".undone");
-                // }
+                    SendChannelMessage(".undone");               
             }
         }
 
@@ -457,7 +432,7 @@ namespace LiveSplit.Racetime.Controller
         public event EventHandler Kicked;
         public event EventHandler AuthenticationFailed;
         public event EventHandlerT<string> RawMessageReceived;
-        public event EventHandlerT<Model.RaceState> StateChanged;
+        public event EventHandlerT<RaceState> StateChanged;
         public event EventHandler UserListRefreshed;
         public event EventHandlerT<IEnumerable<ChatMessage>> MessageReceived;
         public event EventHandler RequestOutputReset;
@@ -475,20 +450,6 @@ namespace LiveSplit.Racetime.Controller
             }
             catch (Exception ex)
             {
-               /* if (ex.Message.Contains("403"))
-                {
-                    //RacetimeAPI.Instance.Authenticator.Reset();
-                    if (await RacetimeAPI.Instance.Authenticator.Authorize())
-                    {
-                        Connect(id);
-                        return;
-                    }
-                    else
-                        SendSystemMessage("Unable to authorize", true);
-                        */
-                    //SendSystemMessage("Access Token expired. Reauthorization required", true);
-                //}
-
                 IsConnected = false;
                 Connect(id);
             }
@@ -499,8 +460,6 @@ namespace LiveSplit.Racetime.Controller
             if (IsConnected)
                 websocket_cts.Cancel();
             reconnect_cts.Cancel();
-
-            //Authenticator.RevokeAccess();
 
             Model.Reset();
             Model.CurrentState.Run.Offset = TimeSpan.Zero;
@@ -581,15 +540,7 @@ namespace LiveSplit.Racetime.Controller
         public void Quit() => SendChannelMessage(".quit");
         public void Enter() => SendChannelMessage(".enter");
         public void Unready() => SendChannelMessage(".unready");
-        public void Done() => Model.Split();// SendChannelMessage(".done");
+        public void Done() => Model.Split();
         public void Undone() => SendChannelMessage(".undone");
-        /*{
-            if (Model.CurrentState.CurrentPhase == TimerPhase.NotRunning)
-            {
-                Model.Start();
-                Model.Split();
-            }
-            Model.UndoSplit();
-        }*/
     }
 }
