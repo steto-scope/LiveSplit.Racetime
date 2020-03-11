@@ -189,7 +189,8 @@ namespace LiveSplit.Racetime.Model
             }
         }
 
-        public static RacetimeUser RaceBot = CreateBot("RaceBot", "bot staff moderator monitor");
+        public static RacetimeUser System = CreateBot("RaceBot", "bot staff moderator monitor");
+        public static RacetimeUser Bot = CreateBot("Bot", "bot staff moderator monitor");
         public static RacetimeUser LiveSplit = CreateBot("LiveSplit", "system staff moderator monitor");
         public static RacetimeUser Anonymous = CreateBot("Anonymous", "anonymous");
 

@@ -119,15 +119,15 @@ namespace LiveSplit.Racetime.Model
             return Create<LiveSplitMessage>(dataroot);
         }
     }
-    public class RaceBotMessage : ChatMessage
+    public class SystemMessage : ChatMessage
     {
-        public override MessageType Type => MessageType.RaceBot;
+        public override MessageType Type => MessageType.System;
 
         public override RacetimeUser User
         {
             get
             {
-                return RacetimeUser.RaceBot;
+                return RacetimeUser.System;
             }
         }
 
@@ -139,6 +139,34 @@ namespace LiveSplit.Racetime.Model
             }
         }
     }
+    public class BotMessage : ChatMessage
+    {
+        public override MessageType Type => MessageType.Bot;
+
+        public string BotName
+        {
+            get
+            {
+                try
+                {
+                    return Data.bot;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        public override RacetimeUser User
+        {
+            get
+            {
+                return RacetimeUser.Bot;
+            }
+        }
+    }
+
     public class UserMessage : ChatMessage
     {
         public override MessageType Type => MessageType.User;
@@ -153,7 +181,7 @@ namespace LiveSplit.Racetime.Model
         {
             get
             {
-                return RacetimeUser.RaceBot;
+                return RacetimeUser.System;
             }
         }
 

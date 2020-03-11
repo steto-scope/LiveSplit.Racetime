@@ -142,7 +142,7 @@ namespace LiveSplit.Racetime.View
             {
                 if (m.Type == MessageType.Race)
                     continue;
-                if (Channel.Race?.State == RaceState.Started && hideFinishesCheckBox.Checked && m is RaceBotMessage && ((RaceBotMessage)m).IsFinishingMessage)
+                if (Channel.Race?.State == RaceState.Started && hideFinishesCheckBox.Checked && m is SystemMessage && ((SystemMessage)m).IsFinishingMessage)
                     continue;
                 if (Channel.Race?.State == RaceState.Started && hideChatCheckBox.Checked && ((m.User.Role & (UserRole.ChannelCreator|UserRole.Monitor|UserRole.Bot|UserRole.Staff|UserRole.System))==0))
                     continue;
@@ -153,17 +153,17 @@ namespace LiveSplit.Racetime.View
 
                 Color col = Color.White;
                 RacetimeUser u = RacetimeUser.Anonymous;
-                bool hideUsername = m.User == null || m.User == RacetimeUser.LiveSplit || (m.User == RacetimeUser.RaceBot && !m.IsSystem);
+                bool hideUsername = m.User == RacetimeUser.LiveSplit || m.User == RacetimeUser.System;
 
-                if (m.User == RacetimeUser.RaceBot)
-                    col = Color.FromArgb(255, 50, 50);
+                if (m.User == RacetimeUser.Bot)
+                    col = Color.FromArgb(115, 100, 255);
                 else
                 {
                     col = ColorList[Math.Abs(m.User.Class) % ColorList.Length];
                 }
                 
                 if(!hideUsername)
-                    chatBox.AppendText( m.IsSystem ? "   "+m.User?.Name : m.User.Name, col, Color.White, false, m.User == RacetimeUser.RaceBot);
+                    chatBox.AppendText( m is BotMessage ? "   ["+(((BotMessage)m).BotName)+"]" : m.User.Name, col, Color.White, false, m.User == RacetimeUser.System);
 
                 chatBox.AppendText("  ");
 
@@ -173,6 +173,10 @@ namespace LiveSplit.Racetime.View
                 if(m.Highlight)
                 {
                     chatBox.SelectionColor = PickHighlightColor(m);
+                }
+                else if(m.User == RacetimeUser.Bot)
+                {
+                    chatBox.SelectionColor = Color.FromArgb(170, 170, 255);
                 }
 
                 foreach(var word in words)
@@ -211,7 +215,7 @@ namespace LiveSplit.Racetime.View
         {
             if (m is ErrorMessage)
                 return Color.FromArgb(255, 94, 94);
-            if(m is RaceBotMessage || m is LiveSplitMessage)
+            if(m is SystemMessage || m is LiveSplitMessage)
             {
                 if (m.Message.Contains("finish") || m.Message.Contains("begun"))
                     return Color.FromArgb(2, 198, 34);
@@ -432,12 +436,17 @@ namespace LiveSplit.Racetime.View
 
         private void inputBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if((e.KeyData == Keys.Return || e.KeyData == Keys.Enter) && !string.IsNullOrEmpty(inputBox.Text))
+            if (e.KeyData == Keys.Return || e.KeyData == Keys.Enter)
             {
-                Channel.SendChannelMessage(inputBox.Text);
-                inputBox.Text = "";
-                inputBox.SelectionStart = 0;
-                inputBox.SelectionLength = 0;
+                if(!string.IsNullOrEmpty(inputBox.Text))
+                {
+                    Channel.SendChannelMessage(inputBox.Text);
+                    inputBox.Text = "";
+                    inputBox.SelectionStart = 0;
+                    inputBox.SelectionLength = 0;
+                }
+                e.SuppressKeyPress = true;
+                e.Handled = true;
             }
         }
 

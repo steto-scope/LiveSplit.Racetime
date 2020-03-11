@@ -380,19 +380,47 @@ start:
                     yield return RTModelBase.Create<RaceMessage>(m.race);
                     break;
                 case "chat.message":
-                    if (m.message.is_system)
-                        yield return RTModelBase.Create<RaceBotMessage>(m.message);
+                    if (m.message.is_system != null && m.message.is_system)
+                        yield return RTModelBase.Create<SystemMessage>(m.message);
                     else
-                        yield return RTModelBase.Create<UserMessage>(m.message);
+                    {
+                        bool isBot = false;
+                        try
+                        {
+                            isBot = m.message.is_bot;
+                        }
+                        catch
+                        {
+                            isBot = false;
+                        }
+                        if(isBot)
+                            yield return RTModelBase.Create<BotMessage>(m.message);
+                        else
+                            yield return RTModelBase.Create<UserMessage>(m.message);
+                    }
                     break;
                 case "chat.history":
                     RequestOutputReset?.Invoke(this, new EventArgs());
                     foreach (var msg in m.messages)
                     {
-                        if (msg.user == null)
-                            yield return RTModelBase.Create<RaceBotMessage>(msg);
+                        if (msg.is_system != null && msg.is_system)
+                            yield return RTModelBase.Create<SystemMessage>(msg);
                         else
-                            yield return RTModelBase.Create<UserMessage>(msg);
+                        {
+                            bool isBot = false;
+                            try
+                            {
+                                isBot = msg.is_bot;
+                            }
+                            catch
+                            {
+                                isBot = false;
+                            }
+                            if (isBot)
+                                yield return RTModelBase.Create<BotMessage>(msg);
+                            else
+                                yield return RTModelBase.Create<UserMessage>(msg);
+                        }
                     }
                     break;
                 case "livesplit":
