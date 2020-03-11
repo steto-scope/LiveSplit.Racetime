@@ -161,9 +161,12 @@ namespace LiveSplit.Racetime.View
                 {
                     col = ColorList[Math.Abs(m.User.Class) % ColorList.Length];
                 }
-                
-                if(!hideUsername)
-                    chatBox.AppendText( m is BotMessage ? "   ["+(((BotMessage)m).BotName)+"]" : m.User.Name, col, Color.White, false, m.User == RacetimeUser.System);
+
+                if (!hideUsername)
+                    chatBox.AppendText(m is BotMessage ? "[" + (((BotMessage)m).BotName) + "]" : m.User.Name, col, Color.White, false, m.User == RacetimeUser.System);
+                else if (m.User == RacetimeUser.System)
+                    chatBox.AppendText("» ");
+
 
                 chatBox.AppendText("  ");
 
