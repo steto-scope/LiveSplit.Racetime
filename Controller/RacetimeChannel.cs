@@ -449,7 +449,7 @@ start:
 
         private void State_OnSplit(object sender, EventArgs e)
         {
-            if (Model.CurrentState.CurrentSplitIndex >= Model.CurrentState.Run.Count)
+            if (Model.CurrentState.CurrentSplitIndex >= Model.CurrentState.Run.Count && PersonalStatus == UserStatus.Racing)
                 SendChannelMessage(".done");
         }
 
