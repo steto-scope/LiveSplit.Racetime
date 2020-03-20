@@ -90,7 +90,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 192.168.178.70:8000 ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die racetime.gg ähnelt.
         /// </summary>
         internal static string DOMAIN {
             get {
@@ -167,7 +167,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die ZSwWfmiJsrQD7gLXUrMWvn21PNyUugwUtKmXVsmQ ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die dKgJFc2jZjgMtUT4Ik9kyJSCZkVqRK1poCcvpKox ähnelt.
         /// </summary>
         internal static string OAUTH_CLIENTID {
             get {
@@ -176,7 +176,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 8rsOHBd0xg96xrzpqQL29qJd1YdEX5nnSCP9vIeCdy7QkZzhGrTlm3IVEKEawP9RYUDWw1RHcWx7Xkgrp69aph31BPlVQTFgfZcN7tlKIZTN36tvxaDrmKDG32XCuLqz ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die Rl6gGXy9zPw5xkSa0gSdE69lnlqbTwuZDAFNSDTgY5QKbQ9AqsqDYlotNGMBboDGkZFbJm9fSIpfI3sCGc3UiiZ2sEpk8KpxYf4kh0G7TjmYmgn0AXyNJNzkgIorHAcB ähnelt.
         /// </summary>
         internal static string OAUTH_CLIENTSECRET {
             get {
@@ -248,7 +248,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 6969 ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die 4888 ähnelt.
         /// </summary>
         internal static string OAUTH_REDIRECT_PORT {
             get {
@@ -266,7 +266,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die http://192.168.178.70:8000/ ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die https://racetime.gg/ ähnelt.
         /// </summary>
         internal static string OAUTH_SERVER {
             get {
@@ -275,7 +275,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 0.7 ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die 1.0 ähnelt.
         /// </summary>
         internal static string PLUGIN_VERSION {
             get {
@@ -284,7 +284,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die http ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die https ähnelt.
         /// </summary>
         internal static string PROTOCOL_REST {
             get {
@@ -293,7 +293,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die ws ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die wss ähnelt.
         /// </summary>
         internal static string PROTOCOL_WEBSOCKET {
             get {
@@ -311,7 +311,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die https://steto-scope.github.io/LiveSplit.Racetime/update.racetime.xml ähnelt.
+        ///   Sucht eine lokalisierte Zeichenfolge, die https://raw.githubusercontent.com/steto-scope/LiveSplit.Racetime/stable/update.racetime.xml ähnelt.
         /// </summary>
         internal static string UPDATE_DEFINITION {
             get {
