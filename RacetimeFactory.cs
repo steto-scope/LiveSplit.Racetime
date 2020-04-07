@@ -1,4 +1,5 @@
 ﻿using LiveSplit.Model;
+using LiveSplit.Options;
 using LiveSplit.Racetime;
 using LiveSplit.UI.Components;
 using System;
@@ -14,9 +15,15 @@ namespace LiveSplit.Racetime
 {
     public class RacetimeFactory : IRaceProviderFactory
     {
-        public RaceProviderAPI Create(ITimerModel model)
+        public RaceProviderAPI Create(ITimerModel model, RaceProviderSettings settings)
         {
+            RacetimeAPI.Instance.Settings = settings;
             return RacetimeAPI.Instance;
+        }
+
+        public RaceProviderSettings CreateSettings()
+        {
+            return new RacetimeSettings();
         }
         
         public string UpdateName => "Racetime Integration";

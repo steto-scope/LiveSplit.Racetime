@@ -40,7 +40,7 @@ namespace LiveSplit.Racetime
         public void Join(ITimerModel model, string id)
         {
 
-            var channel = new RacetimeChannel(model.CurrentState, model);
+            var channel = new RacetimeChannel(model.CurrentState, model, (RacetimeSettings)Settings);
             var form = new ChannelForm(channel, id, model.CurrentState.LayoutSettings.AlwaysOnTop);
         }
 

@@ -1,0 +1,63 @@
+﻿using LiveSplit.Options;
+using LiveSplit.UI;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml;
+
+namespace LiveSplit.Racetime
+{
+    public class RacetimeSettings : RaceProviderSettings
+    {
+        private RacetimeSettingsControl control;
+
+        public override string Name { get => "LiveSplit.Racetime.dll"; set { } }
+
+        public override string DisplayName => "racetime.gg";
+
+        public bool LoadChatHistory { get; set; } = true;
+
+        public override string WebsiteLink => "https://racetime.gg";
+
+        public override string RulesLink => "https://racetime.gg/about/rules";
+
+        public RacetimeSettings()
+        {
+            control = new RacetimeSettingsControl();
+        }
+
+        public override Control GetSettingsControl()
+        {
+            control.Settings = this;
+            return control;
+        }               
+
+        public override void FromXml(XmlElement element, Version version)
+        {
+            base.FromXml(element, version);            
+            LoadChatHistory = SettingsHelper.ParseBool(element["LoadChatHistory"], true);
+        }
+
+        public override XmlElement ToXml(XmlDocument document)
+        {
+            XmlElement e = base.ToXml(document);
+
+            SettingsHelper.CreateSetting(document, e, "LoadChatHistory", LoadChatHistory);
+
+            return e;
+        }
+
+        public override object Clone()
+        {
+            return new RacetimeSettings()
+            {
+                Enabled = Enabled,
+                LoadChatHistory = LoadChatHistory
+            };
+        }
+
+    }
+}

@@ -43,15 +43,16 @@ namespace LiveSplit.Racetime.Controller
         protected List<ChatMessage> log = new List<ChatMessage>();
         public int ConnectionError { get; set; }
         public bool IsConnected { get; set; }
+        public RacetimeSettings Settings { get; set; }
 
 
 
         CancellationTokenSource websocket_cts;
         CancellationTokenSource reconnect_cts;
 
-        public RacetimeChannel(LiveSplitState state, ITimerModel model)
+        public RacetimeChannel(LiveSplitState state, ITimerModel model, RacetimeSettings settings)
         {
-
+            Settings = settings;
             reconnect_cts = new CancellationTokenSource();
 
             Model = model;
@@ -223,7 +224,7 @@ start:
                     {
                         var rf = new StandardComparisonGeneratorsFactory();
 
-                        if (ConnectionError>=0) //don't load after every reconnect
+                        if (ConnectionError>=0 && Settings.LoadChatHistory) //don't load after every reconnect
                         {
                             SendSystemMessage("Loading chat history...");
                             ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));

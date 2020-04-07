@@ -237,7 +237,6 @@ namespace LiveSplit.Racetime.View
             goalLabel.Text = Channel.Race.Goal ?? "";
             
             var s = Channel.Race.Info;
-            Console.WriteLine(s);
             infoLabel.Text = s;
 
             MatchCollection mc = urlPattern.Matches(s);
@@ -285,14 +284,30 @@ namespace LiveSplit.Racetime.View
             switch(Channel.PersonalStatus)
             {
                 case UserStatus.Unknown:
-                    actionButton.Enabled = true;
-                    actionButton.Text = "Enter Race";
-                    readyCheckBox.Enabled = false;
-                    readyCheckBox.Checked = false;
-                    forceReloadButton.Enabled = false;
-                    saveLogButton.Enabled = false;
-                    doneButton.Enabled = false;
-                    doneButton.Visible = false;
+                    if (value == RaceState.Started)
+                    {
+                        actionButton.Enabled = false;
+                        actionButton.Text = "Enter Race";
+                        readyCheckBox.Enabled = false;
+                        readyCheckBox.Checked = false;
+                        forceReloadButton.Enabled = true;
+                        saveLogButton.Enabled = true;
+                        doneButton.Enabled = false;
+                        doneButton.Visible = false;
+                        hideFinishesCheckBox.Enabled = false;
+                    }
+                    else
+                    {
+                        actionButton.Enabled = true;
+                        actionButton.Text = "Enter Race";
+                        readyCheckBox.Enabled = false;
+                        readyCheckBox.Checked = false;
+                        forceReloadButton.Enabled = false;
+                        saveLogButton.Enabled = false;
+                        doneButton.Enabled = false;
+                        doneButton.Visible = false;
+                        hideFinishesCheckBox.Enabled = false;
+                    }
                     break;
                 case UserStatus.NotReady:
                     actionButton.Enabled = true;
@@ -303,6 +318,7 @@ namespace LiveSplit.Racetime.View
                     saveLogButton.Enabled = true;
                     doneButton.Enabled = false;
                     doneButton.Visible = false;
+                    hideFinishesCheckBox.Enabled = true;
                     break;
                 case UserStatus.Ready:
                     actionButton.Enabled = true;
@@ -312,12 +328,14 @@ namespace LiveSplit.Racetime.View
                     forceReloadButton.Enabled = true;
                     saveLogButton.Enabled = true;
                     doneButton.Enabled = false;
+                    hideFinishesCheckBox.Enabled = true;
                     doneButton.Visible = false;
                     break;
                 case UserStatus.Racing:
                     actionButton.Enabled = true;
                     actionButton.Text = "Forfeit Race";
                     readyCheckBox.Enabled = false;
+                    hideFinishesCheckBox.Enabled = true;
                     readyCheckBox.Checked = true;
                     forceReloadButton.Enabled = true;
                     saveLogButton.Enabled = true;
@@ -335,6 +353,7 @@ namespace LiveSplit.Racetime.View
                     }
                     actionButton.Enabled = true;
                     actionButton.Text = "Undone";
+                    hideFinishesCheckBox.Enabled = true;
                     readyCheckBox.Enabled = false;
                     readyCheckBox.Checked = true;
                     forceReloadButton.Enabled = true;
@@ -354,6 +373,7 @@ namespace LiveSplit.Racetime.View
                     forceReloadButton.Enabled = false;
                     saveLogButton.Enabled = true;
                     doneButton.Text = "Disqualified";
+                    hideFinishesCheckBox.Enabled = true;
                     doneButton.Visible = true;
                     doneButton.Enabled = false;
                     userlist.Visible = true;
@@ -364,6 +384,7 @@ namespace LiveSplit.Racetime.View
                     readyCheckBox.Enabled = false;
                     readyCheckBox.Checked = false;
                     forceReloadButton.Enabled = false;
+                    hideFinishesCheckBox.Enabled = true;
                     saveLogButton.Enabled = false;
                     doneButton.Enabled = false;
                     doneButton.Visible = false;
@@ -377,6 +398,7 @@ namespace LiveSplit.Racetime.View
                 readyCheckBox.Enabled = false;
                 readyCheckBox.Checked = false;
                 forceReloadButton.Enabled = true;
+                hideFinishesCheckBox.Enabled = true;
                 saveLogButton.Enabled = true;
                 doneButton.Enabled = false;
                 doneButton.Visible = false;

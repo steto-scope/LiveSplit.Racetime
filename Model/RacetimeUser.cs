@@ -106,7 +106,6 @@ namespace LiveSplit.Racetime.Model
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
                     return DateTime.MaxValue;
                 }
             }
