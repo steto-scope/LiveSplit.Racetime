@@ -19,7 +19,7 @@ namespace LiveSplit.Racetime
         public override string DisplayName => "racetime.gg";
 
         public bool LoadChatHistory { get; set; } = true;
-        public bool HideResults { get; set; } = true;
+        public bool HideResults { get; set; } = false;
 
         public override string WebsiteLink => "https://racetime.gg";
 
