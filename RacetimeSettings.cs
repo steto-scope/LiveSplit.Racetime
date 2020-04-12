@@ -19,6 +19,7 @@ namespace LiveSplit.Racetime
         public override string DisplayName => "racetime.gg";
 
         public bool LoadChatHistory { get; set; } = true;
+        public bool HideResults { get; set; } = true;
 
         public override string WebsiteLink => "https://racetime.gg";
 
@@ -39,6 +40,7 @@ namespace LiveSplit.Racetime
         {
             base.FromXml(element, version);            
             LoadChatHistory = SettingsHelper.ParseBool(element["LoadChatHistory"], true);
+            HideResults = SettingsHelper.ParseBool(element["HideResults"], true);
         }
 
         public override XmlElement ToXml(XmlDocument document)
@@ -46,6 +48,7 @@ namespace LiveSplit.Racetime
             XmlElement e = base.ToXml(document);
 
             SettingsHelper.CreateSetting(document, e, "LoadChatHistory", LoadChatHistory);
+            SettingsHelper.CreateSetting(document, e, "HideResults", HideResults);
 
             return e;
         }
@@ -55,7 +58,8 @@ namespace LiveSplit.Racetime
             return new RacetimeSettings()
             {
                 Enabled = Enabled,
-                LoadChatHistory = LoadChatHistory
+                LoadChatHistory = LoadChatHistory,
+                HideResults = HideResults
             };
         }
 

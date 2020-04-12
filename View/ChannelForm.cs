@@ -77,6 +77,7 @@ namespace LiveSplit.Racetime.View
             actionButton.Enabled = false;
             Channel.Connect(channelId);
             infoLabel.LinkClicked += (ss, args) => { if (urlPattern.IsMatch(infoLabel.Text)) Process.Start(infoLabel.Text.Substring(args.Link.Start,args.Link.Length)); };
+            hideFinishesCheckBox.Checked = Channel.Settings.HideResults;
         }
 
         private void Channel_RaceChanged(object sender, EventArgs e)
@@ -480,6 +481,8 @@ namespace LiveSplit.Racetime.View
 
         private void ChannelForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            Channel.Settings.HideResults = hideFinishesCheckBox.Checked;
+
             if(Channel.Race?.State == RaceState.Started && Channel.PersonalStatus == UserStatus.Racing)
             {
                 DialogResult r = MessageBox.Show("Do you want to FORFEIT before closing the window?", "", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
