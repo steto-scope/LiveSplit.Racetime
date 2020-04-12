@@ -217,6 +217,7 @@
             // 
             // userlist
             // 
+            this.userlist.AutoScroll = true;
             this.userlist.AutoSize = true;
             this.userlist.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(63)))), ((int)(((byte)(65)))));
             this.userlist.Dock = System.Windows.Forms.DockStyle.Fill;

@@ -241,11 +241,9 @@ namespace LiveSplit.Racetime.View
 
             MatchCollection mc = urlPattern.Matches(s);
 
-
             infoLabel.Links.Clear();
             foreach (Match m in mc)
             {
-
                 infoLabel.Links.Add(m.Index, m.Length);
             }
             
@@ -253,14 +251,7 @@ namespace LiveSplit.Racetime.View
 
         private void Channel_UserListRefreshed(object sender, EventArgs e)
         {
-            if ((hideFinishesCheckBox.Checked || hideChatCheckBox.Checked) && Channel.PersonalStatus== UserStatus.Racing)
-                return;
-
-            userlist.Clear();
-            foreach(RacetimeUser u in Channel.Race.Entrants)
-            {
-                userlist.AddUser(u,Channel.Race.StartedAt);
-            }
+            userlist.Update(Channel.Race);            
         }
 
         private void SetInitialState()
@@ -281,7 +272,8 @@ namespace LiveSplit.Racetime.View
                 return;
 
             readyCheckBox.CheckedChanged -= readyCheckBox_CheckedChanged;
-            switch(Channel.PersonalStatus)
+            hideFinishesCheckBox.Font = new Font(hideFinishesCheckBox.Font, Channel.PersonalStatus == UserStatus.Racing && Channel.Race.State == RaceState.Started && hideFinishesCheckBox.Checked ? FontStyle.Italic : FontStyle.Regular);
+            switch (Channel.PersonalStatus)
             {
                 case UserStatus.Unknown:
                     if (value == RaceState.Started)
@@ -456,7 +448,7 @@ namespace LiveSplit.Racetime.View
 
         private void ChannelWindow_Load(object sender, EventArgs e)
         {
-            chatBox.Focus();
+            inputBox.Select();
         }
 
         private void inputBox_KeyDown(object sender, KeyEventArgs e)
@@ -584,7 +576,15 @@ namespace LiveSplit.Racetime.View
 
         private void hideFinishesCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-
+            userlist.Visible = !hideFinishesCheckBox.Checked;
+            if (Channel.PersonalStatus != UserStatus.Racing)
+            {
+                userlist.Visible = true;
+            }
+            else
+            {
+                hideFinishesCheckBox.Font = new Font(hideFinishesCheckBox.Font, Channel.Race.State == RaceState.Started && hideFinishesCheckBox.Checked ? FontStyle.Italic : FontStyle.Regular);
+            }
         }
     }       
 }

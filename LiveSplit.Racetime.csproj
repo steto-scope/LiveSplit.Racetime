@@ -83,12 +83,6 @@
     <Compile Include="View\ChannelForm.Designer.cs">
       <DependentUpon>ChannelForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="View\RacerControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="View\RacerControl.Designer.cs">
-      <DependentUpon>RacerControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="View\RichTextBoxExtensions.cs" />
     <Compile Include="View\UserListControl.cs">
       <SubType>UserControl</SubType>
@@ -107,9 +101,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="View\ChannelForm.resx">
       <DependentUpon>ChannelForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="View\RacerControl.resx">
-      <DependentUpon>RacerControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="View\UserListControl.resx">
       <DependentUpon>UserListControl.cs</DependentUpon>
