@@ -123,7 +123,9 @@ namespace LiveSplit.Racetime.Model
             {
                 try
                 {
-                    return Data.place;
+                    if(Data.place != null)
+                        return Data.place;
+                    return 0;
                 }
                 catch
                 {

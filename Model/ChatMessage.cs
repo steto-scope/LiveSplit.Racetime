@@ -17,12 +17,12 @@ namespace LiveSplit.Racetime.Model
             get
             {
                 try
-                {
-                    return Data.message_plain;
+                {                    
+                    return Data.message;
                 }
                 catch
                 {
-                    return Data.message;
+                    return "";
                 }
             }
         }
@@ -120,6 +120,21 @@ namespace LiveSplit.Racetime.Model
     {
         public override MessageType Type => MessageType.System;
 
+        public override string Message
+        {
+            get
+            {
+                try
+                {
+                    return Data.message_plain;
+                }
+                catch
+                {
+                    return Data.message;
+                }
+            }
+        }
+
         public override RacetimeUser User
         {
             get
@@ -139,6 +154,21 @@ namespace LiveSplit.Racetime.Model
     public class BotMessage : ChatMessage
     {
         public override MessageType Type => MessageType.Bot;
+
+        public override string Message
+        {
+            get
+            {
+                try
+                {
+                    return Data.message_plain;
+                }
+                catch
+                {
+                    return Data.message;
+                }
+            }
+        }
 
         public string BotName
         {
@@ -167,6 +197,21 @@ namespace LiveSplit.Racetime.Model
     public class UserMessage : ChatMessage
     {
         public override MessageType Type => MessageType.User;
+
+        public override string Message
+        {
+            get
+            {
+                try
+                {
+                    return Data.message_plain;
+                }
+                catch
+                {
+                    return Data.message;
+                }
+            }
+        }
     }
     public class ErrorMessage : ChatMessage
     {
@@ -204,6 +249,21 @@ namespace LiveSplit.Racetime.Model
     public class RaceMessage : ChatMessage
     {
         public override MessageType Type => MessageType.Race;
+        
+        public override string Message
+        {
+            get
+            {
+                try
+                {
+                    return Data.message_plain;
+                }
+                catch
+                {
+                    return Data.message;
+                }
+            }
+        }
 
         public Race Race
         {

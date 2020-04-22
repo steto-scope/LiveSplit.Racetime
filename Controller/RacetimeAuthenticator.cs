@@ -14,12 +14,14 @@ using System.Threading.Tasks;
 
 namespace LiveSplit.Racetime.Controller
 {
+    public enum AuthResult { Pending, Success, Failure, Cancelled, Stale }
 
     internal class RacetimeAuthenticator
-    {
+    {        
         protected readonly IAuthentificationSettings s;
         
         protected string Code { get; set; }
+        private TcpListener localEndpoint;
         protected string RedirectUri
         {
             get
@@ -59,7 +61,7 @@ namespace LiveSplit.Racetime.Controller
 
         public bool IsAuthorizing { get; set; }
 
-        public void Reset()
+        public void ResetTokens()
         {
             Code = null;
             AccessToken = null;
@@ -221,11 +223,26 @@ namespace LiveSplit.Racetime.Controller
             return true;
         }
 
-        private async Task<bool> TryGetAuthenticated()
+        public void StopPendingAuthRequest()
+        {           
+            IsAuthorizing = false;
+        }
+
+        public void StopLocalEndpoint()
+        {
+            if (localEndpoint != null)
+            {
+                localEndpoint.Server.Close(0);
+                localEndpoint.Server.Dispose();
+                localEndpoint.Stop();
+                localEndpoint = null;
+            }
+        }
+
+        private async Task<int> TryGetAuthenticated()
         {
             string reqState, state, verifier = null, challenge, request, response;
-            Tuple<int, dynamic> result;
-            TcpListener localEndpoint = null;
+            Tuple<int, dynamic> result;            
 
             Error = null;
             reqState = null;
@@ -235,21 +252,22 @@ namespace LiveSplit.Racetime.Controller
 
             try
             {
+                StopLocalEndpoint();
                 localEndpoint = new TcpListener(s.RedirectAddress, s.RedirectPort);
                 localEndpoint.Start();
 
                 request = $"{s.AuthServer}{s.AuthorizationEndpoint}?response_type=code&client_id={s.ClientID}&scope={s.Scopes}&redirect_uri={RedirectUri}&state={state}&code_challenge={challenge}&code_challenge_method={s.ChallengeMethod}";
 
 
+                Task<TcpClient> serverConnectionTask = localEndpoint.AcceptTcpClientAsync();
+
                 System.Diagnostics.Process.Start(request);
 
-                using (TcpClient serverConnection = await localEndpoint.AcceptTcpClientAsync())
+                using (TcpClient serverConnection = await serverConnectionTask)
                 {
                     response = ReadResponse(serverConnection);
 
-                    localEndpoint.Stop();
-                    localEndpoint.Server.Close();
-                    localEndpoint = null;
+                    StopLocalEndpoint();
 
                     foreach (Match m in parameterRegex.Matches(response))
                     {
@@ -266,13 +284,13 @@ namespace LiveSplit.Racetime.Controller
                         if (Error == "invalid_token" && RefreshToken != null)
                         {
                             Error = "Access Token expired";
-                            return false;
+                            return 401;
                         }
                         else
                         {
                             await SendRedirectAsync(serverConnection, s.FailureEndpoint);
                             Error = "Unable to authenticate: The server rejected the request";
-                            return false;
+                            return 403;
                         }
                     }
 
@@ -280,36 +298,32 @@ namespace LiveSplit.Racetime.Controller
                     {
                         await SendRedirectAsync(serverConnection, s.FailureEndpoint);
                         Error = "Unable to authenticate: The server hasn't responded correctly. Possible protocol error";
-                        return false;
+                        return 400;
                     }
 
                     await SendRedirectAsync(serverConnection, s.SuccessEndpoint);
                     serverConnection.Close();
                 }
+                StopLocalEndpoint();
+            }
+            catch(ObjectDisposedException)
+            {
+                return 404;
             }
             catch(Exception ex)
             {
                 Error = "Unknown Error";
-            }
-            finally
-            {
-                if (localEndpoint != null)
-                {
-                    localEndpoint.Stop();
-                    localEndpoint.Server.Close();
-                    localEndpoint = null;
-                }
-            }
-            
+                StopLocalEndpoint();
+            }            
 
-            return Error == null;
+            return Error == null ? 200 : 500;
         }
 
 
-        public async Task<bool> Authorize()
+        public async Task<AuthResult> Authorize()
         {
             if (IsAuthorizing)
-                return false;
+                return AuthResult.Pending;
 
             IsAuthorizing = true;
             Error = null;
@@ -323,15 +337,18 @@ namespace LiveSplit.Racetime.Controller
             {
                 Ping myPing = new Ping();
                 byte[] buffer = new byte[32];
-                int timeout = 1000;
+                int timeout = 5000;
                 PingOptions pingOptions = new PingOptions();
                 PingReply reply = myPing.Send(host, timeout, buffer, pingOptions);
                 if (reply.Status != IPStatus.Success)
-                    throw new Exception();
+                {
+                    Error = $"No Connection to {host}";
+                    goto failure;
+                }
             }
             catch (Exception)
             {
-                Error = $"No Connection to {host}";
+                Error = $"Unable to ping {host}";
                 goto failure;
             }
 
@@ -342,7 +359,7 @@ namespace LiveSplit.Racetime.Controller
                 if (TryGetUserInfo())
                     goto success;
             }
-            catch(SocketException sex) { goto failure; }
+            catch(SocketException) { goto failure; }
             catch { }
 
             //2nd: if this fails, try to renew access 
@@ -358,18 +375,17 @@ namespace LiveSplit.Racetime.Controller
             }
             catch { }
 
-            //3rd: everyrthing failed, ask the user to authenticate
+            //3rd: everything failed, ask the user to authenticate
             try
             {
-                if (await TryGetAuthenticated())
+                int errorcode = await TryGetAuthenticated();
+                switch(errorcode)
                 {
-                    goto start;
-                }
-                else
-                {
-                    if (Error != null && Error.Contains("rejected")) //user cancelled the request
-                        goto failure;
-                }
+                    case 403: goto cancelled;
+                    case 200: goto start;
+                    case 404: return AuthResult.Stale;
+                    default: goto failure;
+                }                
             }
             catch { }
 
@@ -382,13 +398,16 @@ namespace LiveSplit.Racetime.Controller
                 goto start;
 
 
-       failure:
-            IsAuthorizing = false;
-            Reset();
-            return false;
+        failure:
+            StopPendingAuthRequest();
+            ResetTokens();
+            return AuthResult.Failure;
+        cancelled:
+            StopPendingAuthRequest();
+            return AuthResult.Cancelled;
         success:
-            IsAuthorizing = false;
-            return true;
+            StopPendingAuthRequest();
+            return AuthResult.Success;
         }
 
         public RacetimeUser GetUserInfo(IAuthentificationSettings s, string AccessToken)
@@ -453,26 +472,7 @@ namespace LiveSplit.Racetime.Controller
 
             return new Tuple<int, dynamic>(500, null);
         }
-              
-
-        /*public override async Task<bool> RevokeAccess()
-        {
-            string request = $"token={AccessToken}&client_id={s.ClientID}&client_secret+{s.ClientSecret}&grant_type=authorization_code&code={Code}";
-
-            var result = await RestRequest(s.RevokeEndpoint, request);
-            if (result.Item1 == 400)
-            {
-                if (result.Item2.error == "invalid_grant")
-                {
-                    AccessToken = null;
-                    RefreshToken = null;
-                    TokenExpireDate = DateTime.MaxValue;
-                    return true;
-                }
-            }
-
-            return false;
-        }*/
+            
     }
 
 }

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -74,15 +75,22 @@ namespace LiveSplit.Racetime
 
         protected void RefreshRacesList()
         {
-            Races = GetRacesFromServer().ToArray();
-            RacesRefreshedCallback?.Invoke(this);
+            try
+            {
+                Races = GetRacesFromServer().ToArray();
+                RacesRefreshedCallback?.Invoke(this);
+            }
+            catch
+            {
+            }            
         }
 
         
         protected IEnumerable<Race> GetRacesFromServer()
         {
-            var races = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + racesEndpoint)).races;
-        
+            var data = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + racesEndpoint));
+            var races = data.races;
+
             foreach (var r in races)
             {
                 var fulldata = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + r.name + "/data"));

@@ -458,7 +458,11 @@ namespace LiveSplit.Racetime.View
             {
                 if(!string.IsNullOrEmpty(inputBox.Text))
                 {
-                    Channel.SendChannelMessage(inputBox.Text);
+                    if (inputBox.Text.Trim() == ".done")
+                        Channel.Done();
+                    else
+                        Channel.SendChannelMessage(inputBox.Text);
+
                     inputBox.Text = "";
                     inputBox.SelectionStart = 0;
                     inputBox.SelectionLength = 0;
@@ -481,6 +485,7 @@ namespace LiveSplit.Racetime.View
 
         private void ChannelForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            //RacetimeAPI.Instance.Authenticator.StopPendingAuthRequest();
             Channel.Settings.HideResults = hideFinishesCheckBox.Checked;
 
             if(Channel.Race?.State == RaceState.Started && Channel.PersonalStatus == UserStatus.Racing)

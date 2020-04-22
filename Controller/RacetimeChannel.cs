@@ -31,12 +31,10 @@ namespace LiveSplit.Racetime.Controller
         {
             get
             {
-                var u = Race?.Entrants?.FirstOrDefault(x => x.Name.ToLower() == RacetimeAPI.Instance.Authenticator.Identity?.Name.ToLower());
-                if (u == null)
-                    return UserStatus.Unknown;
-                return u.Status;
+                return GetPersonalStatus(Race);
             }
         }
+                
         protected ITimerModel Model { get; set; }
 
         private ClientWebSocket ws;
@@ -76,6 +74,14 @@ namespace LiveSplit.Racetime.Controller
             }
         }
 
+        protected UserStatus GetPersonalStatus(Race race)
+        {
+            var u = race?.Entrants?.FirstOrDefault(x => x.Name.ToLower() == RacetimeAPI.Instance.Authenticator.Identity?.Name.ToLower());
+            if (u == null)
+                return UserStatus.Unknown;
+            return u.Status;
+        }
+
         private async Task<bool> ReceiveAndProcess()
         {
             WebSocketReceiveResult result;
@@ -103,8 +109,8 @@ namespace LiveSplit.Racetime.Controller
                         buf = newBuf;
                         free = buf.Length - read;
                     }
-                    result = await ws.ReceiveAsync(new ArraySegment<byte>(buf, read, free), websocket_cts.Token);
-                    if (websocket_cts.IsCancellationRequested)
+                    result = await ws?.ReceiveAsync(new ArraySegment<byte>(buf, read, free), websocket_cts?.Token ?? CancellationToken.None);
+                    if (websocket_cts?.IsCancellationRequested ?? true)
                         return false;
                     read += result.Count;
                     free -= result.Count;
@@ -118,7 +124,7 @@ namespace LiveSplit.Racetime.Controller
             catch (InternalBufferOverflowException)
             {
                 //flush socket
-                while (!(result = await ws.ReceiveAsync(new ArraySegment<byte>(buf, 0, buf.Length), websocket_cts.Token)).EndOfMessage)
+                while (!(result = await ws?.ReceiveAsync(new ArraySegment<byte>(buf, 0, buf.Length), websocket_cts?.Token ?? CancellationToken.None)).EndOfMessage)
                     ;
 
                 SendSystemMessage("Content too large to load");
@@ -170,18 +176,31 @@ start:
             {
                 IsConnected = true;
 
-                if (await Authenticator.Authorize())
+                AuthResult r = await Authenticator.Authorize();
+                switch(r)
                 {
-                    SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
-                    Authorized?.Invoke(this, null);
+                    case AuthResult.Success:
+                        SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
+                        Authorized?.Invoke(this, null);
+                        break;
+                    case AuthResult.Failure:
+                        SendSystemMessage(Authenticator.Error, true);
+                        AuthenticationFailed?.Invoke(this, new EventArgs());
+                        ConnectionError++;
+                        goto cleanup;
+                    case AuthResult.Cancelled:
+                        SendSystemMessage($"Authorization declined by user.");
+                        ConnectionError = -1;
+                        goto cleanup;
+                    case AuthResult.Pending:
+                        Authenticator.StopPendingAuthRequest();
+                        IsConnected = false;
+                        goto start;
+                    case AuthResult.Stale:
+                        goto cleanup_silent;
+
                 }
-                else
-                {
-                    SendSystemMessage(Authenticator.Error, true);
-                    AuthenticationFailed?.Invoke(this, new EventArgs());
-                    ConnectionError++;
-                    goto cleanup;
-                }
+
                 //opening the socket
                 ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
                 try
@@ -206,18 +225,10 @@ start:
                         ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
                         await ReceiveAndProcess();
 
-                        if (Race.StartedAt != DateTime.MaxValue)
-                            Model.CurrentState.Run.Offset = DateTime.UtcNow - Race.StartedAt;
-                        else
-                            Model.CurrentState.Run.Offset = -Race.StartDelay;
                     }
                     catch (Exception ex)
                     {
-
                         SendSystemMessage("Unable to obtain Race information. Try reloading");
-                        //Authenticator.AccessToken = null;
-                        //Authenticator.RefreshToken = null;
-
                         goto cleanup;
                     }
                     try
@@ -264,12 +275,13 @@ start:
                         break;
                     default:
                     case WebSocketState.Aborted:
-                        if(!websocket_cts.IsCancellationRequested)
+                        if(!(websocket_cts?.IsCancellationRequested ?? true))
                             ConnectionError++;
 
                         break;
                 }
             }
+            ws = null;
 
         cleanup:
             IsConnected = false;
@@ -283,15 +295,15 @@ start:
             else
                 SendSystemMessage("Disconnect");
 
-            websocket_cts.Dispose();
-            
+        cleanup_silent:
+            websocket_cts?.Dispose();
+            websocket_cts = null;
             Disconnected?.Invoke(this, new EventArgs());
-
         }
 
         public async void ForceReload()
         {
-            if (IsConnected)
+            if (IsConnected && ws != null)
             {
                 ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
                 ws.SendAsync(otherBytesToSend, WebSocketMessageType.Text, true, CancellationToken.None);
@@ -303,68 +315,70 @@ start:
 
         private void UpdateRaceData(RaceMessage msg)
         {
-
-            if (Race == null)
-            {
-                Race = msg.Race;
-                RaceChanged?.Invoke(this, new EventArgs());
-                GoalChanged?.Invoke(this, new EventArgs());
-                UserListRefreshed?.Invoke(this, new EventArgs());
-                return;
-            }
-
-
-
-            switch (msg.Race?.State)
-            {
-                case RaceState.Starting:
-                    Model.CurrentState.Run.Offset = -msg.Race.StartDelay;
-                    Model.Start();
-                    break;
-                case RaceState.Cancelled:
-                    Model.Reset();
-                    break;
-            }
-
+            //safety check, this shouldn't happen
             if (RacetimeAPI.Instance.Authenticator.Identity == null)
                 return;
+            
 
+            RaceState r = Race?.State ?? RaceState.Unknown;
+            RaceState nr = msg.Race?.State ?? RaceState.Unknown;
+            UserStatus u = GetPersonalStatus(Race);
+            UserStatus nu = GetPersonalStatus(msg.Race);
 
-            if ((Race.State == RaceState.Open || Race.State == RaceState.OpenInviteOnly) && Model.CurrentState.Run.Offset < TimeSpan.Zero && (msg.Race.StartDelay != Race.StartDelay))
+            if (msg.Race != null)
+                Race = msg.Race;
+
+            //update only neccessary if the state of the player and/or the race has changed
+            if ((r != nr) || (u != nu))
             {
-                Model.CurrentState.Run.Offset = -msg.Race.StartDelay;
+                //we are (now) part of the race
+                if (nu != UserStatus.NotInRace && nu != UserStatus.Unknown)
+                {
+                    //the race is starting
+                    if ((r == RaceState.Open || r == RaceState.OpenInviteOnly) && nr == RaceState.Starting)
+                    {                        
+                        Model.Reset();
+                        Model.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
+                        Model.Start();                        
+                    }
+
+                    //the race is already running and we're not finished, sync the timer
+                    if(nr == RaceState.Started && nu == UserStatus.Racing)
+                    {
+                        Model.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
+                        if (Model.CurrentState.CurrentPhase == TimerPhase.Ended)
+                            Model.UndoSplit();
+                        if (Model.CurrentState.CurrentPhase == TimerPhase.Paused)
+                            Model.Pause();
+                        if (Model.CurrentState.CurrentPhase == TimerPhase.NotRunning)
+                            Model.Start();
+                    }
+
+                    if(u != nu && nu == UserStatus.Finished)
+                    {
+                        Model.Split();
+                    }
+
+                    if (u != nu && nu == UserStatus.Forfeit)
+                    {
+                        Model.Reset();
+                    }
+                    if (u != nu && nu == UserStatus.Disqualified)
+                    {
+                        Model.Reset();
+                    }
+
+                    if (r != nr && nr == RaceState.Cancelled)
+                    {
+                        Model.Reset();
+                    }                    
+                }                      
             }
-
-            Race = msg.Race ?? Race;
-
-            var newIdentity = msg.Race.Entrants?.FirstOrDefault(x => x.Name.ToLower() == RacetimeAPI.Instance.Authenticator.Identity.Name?.ToLower());
-            switch (newIdentity?.Status)
-            {
-                case UserStatus.Racing:
-                    Model.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
-                    if (Model.CurrentState.CurrentPhase == TimerPhase.Ended)
-                        Model.UndoSplit();
-                    if (Model.CurrentState.CurrentPhase == TimerPhase.Paused)
-                        Model.Pause();
-                    if (Model.CurrentState.CurrentPhase == TimerPhase.NotRunning)
-                        Model.Start();
-
-                    break;
-                case UserStatus.Disqualified:
-                    Model.Reset();
-                    break;
-                case UserStatus.Finished:
-                    Model.Split();
-                    break;
-                case UserStatus.Forfeit:
-                    Model.Reset();
-                    break;
-            }
-
 
             
+
+            StateChanged?.Invoke(this, nr);
             RaceChanged?.Invoke(this, new EventArgs());
-            StateChanged?.Invoke(this, Race.State);
             UserListRefreshed?.Invoke(this, new EventArgs());
             GoalChanged?.Invoke(this, new EventArgs());
 
@@ -474,7 +488,6 @@ start:
         {
             try
             {
-                await RacetimeAPI.Instance.Authenticator.Authorize();
                 await RunAsync(id.Split('/')[1]);
             }
             catch (Exception ex)
@@ -487,11 +500,13 @@ start:
         public void Disconnect()
         {
             if (IsConnected)
-                websocket_cts.Cancel();
-            reconnect_cts.Cancel();
+            {                                
+                websocket_cts?.Cancel();
+                websocket_cts = null;
+            }
+            reconnect_cts?.Cancel();
+            reconnect_cts = null;
 
-            Model.Reset();
-            Model.CurrentState.Run.Offset = TimeSpan.Zero;
             Model.OnPause -= Model_OnPause;
             Model.OnSplit -= State_OnSplit;
             Model.OnReset -= State_OnReset;
@@ -505,6 +520,7 @@ start:
             if (PersonalStatus == UserStatus.Racing)
             {
                 SendChannelMessage(".forfeit");
+                Model.Reset();
             }
         }
 
@@ -540,18 +556,22 @@ start:
 
         public async void SendChannelMessage(string message)
         {
+            
             message = message.Trim();
             message = message.Replace("\"", "\\\"");
+
+
             string data = TryCreateCommand(ref message) ? message : "{ \"action\": \"message\", \"data\": { \"message\":\"" + message + "\", \"guid\":\"" + Guid.NewGuid().ToString() + "\" } }";
             RawMessageReceived?.Invoke(this, data);
 
             ArraySegment<byte> bytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(data));
 
-            if (IsConnected)
+            if (IsConnected && ws != null)
             {
                 try
                 {
-                    await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, websocket_cts.Token);
+                    if(websocket_cts != null)
+                        await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, websocket_cts.Token);
                 }
                 catch
                 {
@@ -564,7 +584,7 @@ start:
         {
             var msg = new ChatMessage[] { LiveSplitMessage.Create(message, important) };
             MessageReceived?.Invoke(this, msg);
-            RawMessageReceived?.Invoke(this, msg.First().Posted.ToString());
+            RawMessageReceived?.Invoke(this, msg.First().Posted.ToString());            
         }
 
         public void Ready() => SendChannelMessage(".ready");
