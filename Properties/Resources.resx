@@ -192,7 +192,7 @@
     <value>https://racetime.gg/</value>
   </data>
   <data name="PLUGIN_VERSION" xml:space="preserve">
-    <value>1.0</value>
+    <value>1.1</value>
   </data>
   <data name="PROTOCOL_REST" xml:space="preserve">
     <value>https</value>

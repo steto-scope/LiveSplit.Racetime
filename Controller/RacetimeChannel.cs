@@ -318,7 +318,12 @@ start:
             //safety check, this shouldn't happen
             if (RacetimeAPI.Instance.Authenticator.Identity == null)
                 return;
-            
+
+            //ignore double tap prevention when updating race data
+            var m = Model;
+            if (m is DoubleTapPrevention)
+                m = ((DoubleTapPrevention)Model).InternalModel;
+
 
             RaceState r = Race?.State ?? RaceState.Unknown;
             RaceState nr = msg.Race?.State ?? RaceState.Unknown;
@@ -336,52 +341,49 @@ start:
                 {
                     //the race is starting
                     if ((r == RaceState.Open || r == RaceState.OpenInviteOnly) && nr == RaceState.Starting)
-                    {                        
-                        Model.Reset();
-                        Model.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
-                        Model.Start();                        
+                    {
+                        m.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
+                        m.Reset();
+                        m.Start();
                     }
 
                     //the race is already running and we're not finished, sync the timer
                     if(nr == RaceState.Started && nu == UserStatus.Racing)
                     {
-                        Model.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
-                        if (Model.CurrentState.CurrentPhase == TimerPhase.Ended)
-                            Model.UndoSplit();
-                        if (Model.CurrentState.CurrentPhase == TimerPhase.Paused)
-                            Model.Pause();
-                        if (Model.CurrentState.CurrentPhase == TimerPhase.NotRunning)
-                            Model.Start();
+                        m.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
+                        if (m.CurrentState.CurrentPhase == TimerPhase.Ended)
+                            m.UndoSplit();
+                        if (m.CurrentState.CurrentPhase == TimerPhase.Paused)
+                            m.Pause();
+                        if (m.CurrentState.CurrentPhase == TimerPhase.NotRunning)
+                            m.Start();
                     }
 
                     if(u != nu && nu == UserStatus.Finished)
                     {
-                        Model.Split();
+                        m.Split();
                     }
 
                     if (u != nu && nu == UserStatus.Forfeit)
                     {
-                        Model.Reset();
+                        m.Reset();
                     }
                     if (u != nu && nu == UserStatus.Disqualified)
                     {
-                        Model.Reset();
+                        m.Reset();
                     }
 
                     if (r != nr && nr == RaceState.Cancelled)
                     {
-                        Model.Reset();
+                        m.Reset();
                     }                    
                 }                      
             }
-
-            
 
             StateChanged?.Invoke(this, nr);
             RaceChanged?.Invoke(this, new EventArgs());
             UserListRefreshed?.Invoke(this, new EventArgs());
             GoalChanged?.Invoke(this, new EventArgs());
-
         }
 
         public IEnumerable<ChatMessage> Parse(dynamic m)
@@ -519,7 +521,6 @@ start:
         {
             if (PersonalStatus == UserStatus.Racing)
             {
-                SendChannelMessage(".forfeit");
                 Model.Reset();
             }
         }
