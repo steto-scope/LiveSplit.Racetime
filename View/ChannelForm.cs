@@ -13,6 +13,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -52,7 +53,6 @@ namespace LiveSplit.Racetime.View
             Color.FromArgb(229,204,161),
             Color.FromArgb(229,183,161)
         };
-
         public ChannelForm(RacetimeChannel channel, string channelId, bool alwaysOnTop = true)
         {
             ChannelID = channelId;
@@ -69,7 +69,6 @@ namespace LiveSplit.Racetime.View
             Channel.Disconnected += Channel_Disconnected;
             Channel.RaceChanged += Channel_RaceChanged;
             Channel.Authorized += Channel_Authorized;
-
             InitializeComponent();
             DownloadAllEmotes();
             TopMost = alwaysOnTop;
@@ -80,8 +79,19 @@ namespace LiveSplit.Racetime.View
             Channel.Connect(channelId);
             infoLabel.LinkClicked += (ss, args) => { if (urlPattern.IsMatch(infoLabel.Text)) Process.Start(infoLabel.Text.Substring(args.Link.Start, args.Link.Length)); };
             hideFinishesCheckBox.Checked = Channel.Settings.HideResults;
+            HideCaret(chatBox.Handle);
+        }
+        private void chatBox_MouseUp(object sender, MouseEventArgs e)
+        {
+            HideCaret(chatBox.Handle);
         }
 
+        private void chatBox_MouseDown(object sender, MouseEventArgs e)
+        {
+            HideCaret(chatBox.Handle);
+        }
+        [DllImport("user32.dll")]
+        private static extern int HideCaret(IntPtr hwnd);
         private void Channel_RaceChanged(object sender, EventArgs e)
         {
             Text = $"{Channel.Race.Goal} [{Channel.Race.GameName}] - {Channel.Race.ChannelName}";
@@ -152,6 +162,7 @@ namespace LiveSplit.Racetime.View
                 chatBox.ScrollToCaret();
             }
             catch (Exception ex) { }
+            HideCaret(chatBox.Handle);
         }
 
         private void Channel_PurgedMessage(object sender, dynamic value)
@@ -203,6 +214,7 @@ namespace LiveSplit.Racetime.View
                 chatBox.ScrollToCaret();
             }
             catch (Exception ex) { }
+            HideCaret(chatBox.Handle);
 
         }
 
@@ -225,6 +237,7 @@ namespace LiveSplit.Racetime.View
             catch (WebException ex)
             {
             }
+            HideCaret(chatBox.Handle);
         }
         private void Delete_Clicked(object sender, EventArgs e)
         {
@@ -243,6 +256,7 @@ namespace LiveSplit.Racetime.View
             catch (WebException ex)
             {
             }
+            HideCaret(chatBox.Handle);
         }
         private void Channel_ChatUpdate(object sender, IEnumerable<ChatMessage> chatMessages)
         {
@@ -357,6 +371,7 @@ namespace LiveSplit.Racetime.View
 
                 chatBox.SelectionStart = chatBox.Text.Length;
                 chatBox.ScrollToCaret();
+                HideCaret(chatBox.Handle);
             }
 
         }
@@ -747,5 +762,7 @@ namespace LiveSplit.Racetime.View
                 hideFinishesCheckBox.Font = new Font(hideFinishesCheckBox.Font, Channel.Race.State == RaceState.Started && hideFinishesCheckBox.Checked ? FontStyle.Italic : FontStyle.Regular);
             }
         }
+
+
     }
 }
