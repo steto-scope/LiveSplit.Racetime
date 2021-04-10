@@ -211,28 +211,38 @@ namespace LiveSplit.Racetime.View
         }
         private void Purge_Clicked(object sender, EventArgs e)
         {
+            Button cb = (sender as Button);
+            int charindex = chatBox.GetCharIndexFromPosition(cb.Location);
+            int index = chatBox.GetLineFromCharIndex(charindex) - 1;
+            string id = rtf_chatmessages[index];
+            var request = (HttpWebRequest)WebRequest.Create(new Uri(Channel.FullWebRoot + "o/" + Channel.Race.Id + $"/monitor/purge/{id}"));
+            request.Method = "POST";
+            request.Headers.Add("Authorization", "Bearer " + RacetimeAPI.Instance.Authenticator.AccessToken);
             try
             {
-                Button cb = (sender as Button);
-                int charindex = chatBox.GetCharIndexFromPosition(cb.Location);
-                int index = chatBox.GetLineFromCharIndex(charindex);
-                string line = chatBox.Lines[index];
-                string user = line.Trim().Split(new char[0], StringSplitOptions.RemoveEmptyEntries).Skip(1).FirstOrDefault();
-                Channel.SendChannelMessage(".purge " + user);
+                var response = (HttpWebResponse)request.GetResponse();
             }
-            catch (Exception ex) { }
+            catch (WebException ex)
+            {
+            }
         }
         private void Delete_Clicked(object sender, EventArgs e)
         {
+
+            Button cb = (sender as Button);
+            int charindex = chatBox.GetCharIndexFromPosition(cb.Location);
+            int index = chatBox.GetLineFromCharIndex(charindex) - 1;
+            string id = rtf_chatmessages[index];
+            var request = (HttpWebRequest)WebRequest.Create(new Uri(Channel.FullWebRoot + "o/" + Channel.Race.Id + $"/monitor/delete/{id}"));
+            request.Method = "POST";
+            request.Headers.Add("Authorization", "Bearer " + RacetimeAPI.Instance.Authenticator.AccessToken);
             try
             {
-                Button cb = (sender as Button);
-                int charindex = chatBox.GetCharIndexFromPosition(cb.Location);
-                int index = chatBox.GetLineFromCharIndex(charindex) - 1;
-                string id = rtf_chatmessages[index];
-                Channel.SendChannelMessage(".delete " + id);
+                var response = (HttpWebResponse)request.GetResponse();
             }
-            catch (Exception ex) { }
+            catch (WebException ex)
+            {
+            }
         }
         private void Channel_ChatUpdate(object sender, IEnumerable<ChatMessage> chatMessages)
         {

@@ -267,7 +267,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to read chat_message race_action.
+        ///   Looks up a localized string similar to read chat_message race_action chat_delete chat_purge.
         /// </summary>
         internal static string OAUTH_SCOPES {
             get {

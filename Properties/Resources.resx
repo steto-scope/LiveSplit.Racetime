@@ -192,7 +192,7 @@
     <value>4888</value>
   </data>
   <data name="OAUTH_SCOPES" xml:space="preserve">
-    <value>read chat_message race_action</value>
+    <value>read chat_message race_action chat_delete chat_purge</value>
   </data>
   <data name="OAUTH_SERVER" xml:space="preserve">
     <value>http://localhost:8000/</value>
