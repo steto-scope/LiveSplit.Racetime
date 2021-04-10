@@ -21,7 +21,7 @@ namespace LiveSplit.Racetime.Controller
 
         public const int bufferSize = 20480;
         public const int maxBufferSize = 2097152;
-        public readonly int[] reconnectDelays = {0, 5, 5, 10, 10, 10, 15};
+        public readonly int[] reconnectDelays = { 0, 5, 5, 10, 10, 10, 15 };
 
         public string FullWebRoot => string.Format("{0}://{1}/", Properties.Resources.PROTOCOL_REST, Properties.Resources.DOMAIN);
         public string FullSocketRoot => string.Format("{0}://{1}/", Properties.Resources.PROTOCOL_WEBSOCKET, Properties.Resources.DOMAIN);
@@ -34,7 +34,7 @@ namespace LiveSplit.Racetime.Controller
                 return GetPersonalStatus(Race);
             }
         }
-                
+
         protected ITimerModel Model { get; set; }
 
         private ClientWebSocket ws;
@@ -42,8 +42,11 @@ namespace LiveSplit.Racetime.Controller
         public int ConnectionError { get; set; }
         public bool IsConnected { get; set; }
         public RacetimeSettings Settings { get; set; }
-
-
+        public string OpenedBy { get; set; }
+        public List<string> Monitors = new List<string>();
+        public string Username { get; set; }
+        public bool Invited = false;
+        public TimeSpan Offset { get; set; }
 
         CancellationTokenSource websocket_cts;
         CancellationTokenSource reconnect_cts;
@@ -68,7 +71,7 @@ namespace LiveSplit.Racetime.Controller
 
         private async void Reconnect()
         {
-            if (ConnectionError>=0 && Race != null && !RacetimeAPI.Instance.Authenticator.IsAuthorizing)
+            if (ConnectionError >= 0 && Race != null && !RacetimeAPI.Instance.Authenticator.IsAuthorizing)
             {
                 Connect(Race.Id);
             }
@@ -143,12 +146,35 @@ namespace LiveSplit.Racetime.Controller
             ChatMessage racemessage = chatmessages.FirstOrDefault(x => x.Type == MessageType.Race);
             if (racemessage != null)
             {
+                if (racemessage.Data["monitors"] != null)
+                {
+                    var monitors = racemessage.Data["monitors"];
+                    Monitors.Clear();
+                    foreach (var usr in monitors)
+                    {
+                        Monitors.Add(usr["name"]);
+                    }
+                    foreach (var usr in racemessage.Data["entrants"])
+                    {
+                        if (usr["user"]["name"] == Username)
+                        {
+                            if (usr["actions"].Contains("accept_invite"))
+                            {
+                                Invited = true;
+                                break;
+                            }
+                        }
+                    }
+                    Monitors.Add(racemessage.Data["opened_by"]["name"]);
+                    OpenedBy = racemessage.Data["opened_by"]["name"];
+                }
+
                 UpdateRaceData((RaceMessage)racemessage);
             }
 
             var errormsg = chatmessages.FirstOrDefault(x => x.Type == MessageType.Error)?.Message;
             if (errormsg != null && string.Join("", errormsg).Contains("Permission denied"))
-            {                
+            {
                 ForceReload();
                 return true;
             }
@@ -164,7 +190,7 @@ namespace LiveSplit.Racetime.Controller
 
         public async Task RunAsync(string id)
         {
-start:
+        start:
             if (IsConnected)
             {
                 return;
@@ -177,7 +203,8 @@ start:
                 IsConnected = true;
 
                 AuthResult r = await Authenticator.Authorize();
-                switch(r)
+                Username = Authenticator.Identity?.Name;
+                switch (r)
                 {
                     case AuthResult.Success:
                         SendSystemMessage($"Authorization successful. Hello, {Authenticator.Identity?.Name}");
@@ -203,6 +230,7 @@ start:
 
                 //opening the socket
                 ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
+
                 try
                 {
                     await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/o/race/" + id), websocket_cts.Token);
@@ -235,7 +263,7 @@ start:
                     {
                         var rf = new StandardComparisonGeneratorsFactory();
 
-                        if (ConnectionError>=0 && Settings.LoadChatHistory) //don't load after every reconnect
+                        if (ConnectionError >= 0 && Settings.LoadChatHistory) //don't load after every reconnect
                         {
                             SendSystemMessage("Loading chat history...");
                             ArraySegment<byte> otherBytesToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes("{ \"action\":\"gethistory\" }"));
@@ -275,7 +303,7 @@ start:
                         break;
                     default:
                     case WebSocketState.Aborted:
-                        if(!(websocket_cts?.IsCancellationRequested ?? true))
+                        if (!(websocket_cts?.IsCancellationRequested ?? true))
                             ConnectionError++;
 
                         break;
@@ -288,14 +316,14 @@ start:
 
             if (ConnectionError >= 0)
             {
-                SendSystemMessage($"Auto-reconnect in {reconnectDelays[Math.Min(reconnectDelays.Length-1,ConnectionError)]}s...");
+                SendSystemMessage($"Auto-reconnect in {reconnectDelays[Math.Min(reconnectDelays.Length - 1, ConnectionError)]}s...");
                 await Task.Delay(reconnectDelays[Math.Min(reconnectDelays.Length - 1, ConnectionError)] * 1000);
                 goto start;
             }
             else
                 SendSystemMessage("Disconnect");
 
-        cleanup_silent:
+            cleanup_silent:
             websocket_cts?.Dispose();
             websocket_cts = null;
             Disconnected?.Invoke(this, new EventArgs());
@@ -342,48 +370,52 @@ start:
                     //the race is starting
                     if ((r == RaceState.Open || r == RaceState.OpenInviteOnly) && nr == RaceState.Starting)
                     {
-                        m.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
-                        m.Reset();
                         m.Start();
                     }
 
                     //the race is already running and we're not finished, sync the timer
-                    if(nr == RaceState.Started && nu == UserStatus.Racing)
+                    else if (nr == RaceState.Started && nu == UserStatus.Racing)
                     {
-                        m.CurrentState.Run.Offset = DateTime.UtcNow - msg.Race.StartedAt;
                         if (m.CurrentState.CurrentPhase == TimerPhase.Ended)
                             m.UndoSplit();
-                        if (m.CurrentState.CurrentPhase == TimerPhase.Paused)
+                        else if (m.CurrentState.CurrentPhase == TimerPhase.Paused)
                             m.Pause();
-                        if (m.CurrentState.CurrentPhase == TimerPhase.NotRunning)
+                        else if (m.CurrentState.CurrentPhase == TimerPhase.NotRunning)
+                        {
+                            m.CurrentState.Run.Offset = DateTime.UtcNow.Subtract(Race.StartedAt);
+                            m.CurrentState.AdjustedStartTime = m.CurrentState.StartTimeWithOffset = TimeStamp.Now - m.CurrentState.Run.Offset;
                             m.Start();
+                        }
+                        else
+                        {
+                            m.CurrentState.Run.Offset = Offset;
+                        }
+
                     }
 
-                    if(u != nu && nu == UserStatus.Finished)
+                    //Nothing has started yet but we just want to prep the countdown
+                    else if ((nr == RaceState.Open || nr == RaceState.OpenInviteOnly) && (nr != RaceState.Starting || nr != RaceState.Started))
                     {
-                        m.Split();
+                        if (Offset.TotalMilliseconds == 0)
+                        {
+                            Offset = m.CurrentState.Run.Offset;
+                        }
+                        m.CurrentState.Run.Offset = Race.StartDelay.Negate();
+                        m.CurrentState.AdjustedStartTime = TimeStamp.Now - m.CurrentState.Run.Offset;
                     }
-
-                    if (u != nu && nu == UserStatus.Forfeit)
-                    {
-                        m.Reset();
-                    }
-                    if (u != nu && nu == UserStatus.Disqualified)
-                    {
-                        m.Reset();
-                    }
-
-                    if (r != nr && nr == RaceState.Cancelled)
-                    {
-                        m.Reset();
-                    }                    
-                }                      
+                }
             }
 
             StateChanged?.Invoke(this, nr);
             RaceChanged?.Invoke(this, new EventArgs());
             UserListRefreshed?.Invoke(this, new EventArgs());
             GoalChanged?.Invoke(this, new EventArgs());
+        }
+
+        private async void delayStart(ITimerModel timer, TimeSpan delay)
+        {
+            await Task.Delay(delay);
+            timer.Start();
         }
 
         public IEnumerable<ChatMessage> Parse(dynamic m)
@@ -395,6 +427,12 @@ start:
                     break;
                 case "race.data":
                     yield return RTModelBase.Create<RaceMessage>(m.race);
+                    break;
+                case "chat.delete":
+                    DeletedMessage?.Invoke(this, m.delete);
+                    break;
+                case "chat.purge":
+                    PurgedMessage?.Invoke(this, m.purge);
                     break;
                 case "chat.message":
                     if (m.message.is_system != null && m.message.is_system)
@@ -410,7 +448,7 @@ start:
                         {
                             isBot = false;
                         }
-                        if(isBot)
+                        if (isBot)
                             yield return RTModelBase.Create<BotMessage>(m.message);
                         else
                             yield return RTModelBase.Create<UserMessage>(m.message);
@@ -451,7 +489,7 @@ start:
 
         private void State_OnReset(object sender, TimerPhase value)
         {
-            if(PersonalStatus == UserStatus.Racing)
+            if (PersonalStatus == UserStatus.Racing)
                 SendChannelMessage(".forfeit");
         }
 
@@ -459,8 +497,8 @@ start:
         {
             if (Model.CurrentState.CurrentSplitIndex == Model.CurrentState.Run.Count - 1)
             {
-                 if(PersonalStatus != UserStatus.Racing)
-                    SendChannelMessage(".undone");               
+                if (PersonalStatus != UserStatus.Racing)
+                    SendChannelMessage(".undone");
             }
         }
 
@@ -481,6 +519,8 @@ start:
         public event EventHandler UserListRefreshed;
         public event EventHandlerT<IEnumerable<ChatMessage>> MessageReceived;
         public event EventHandler RequestOutputReset;
+        public event EventHandlerT<dynamic> DeletedMessage;
+        public event EventHandlerT<dynamic> PurgedMessage;
         public event EventHandler Authorized;
 
 
@@ -488,21 +528,28 @@ start:
 
         public async void Connect(string id)
         {
-            try
+
+            for (int attempts = 0; attempts < 5; attempts++)
+            // Lets limit this to 5 tries so we don't try forever.
             {
-                await RunAsync(id.Split('/')[1]);
-            }
-            catch (Exception ex)
-            {
-                IsConnected = false;
-                Connect(id);
+                try
+                {
+                    await RunAsync(id.Split('/')[1]);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    IsConnected = false;
+                }
+                // Wait for a few seconds to not spam retry.
+                Thread.Sleep(5000);
             }
         }
 
         public void Disconnect()
         {
             if (IsConnected)
-            {                                
+            {
                 websocket_cts?.Cancel();
                 websocket_cts = null;
             }
@@ -557,7 +604,7 @@ start:
 
         public async void SendChannelMessage(string message)
         {
-            
+
             message = message.Trim();
             message = message.Replace("\"", "\\\"");
 
@@ -571,7 +618,7 @@ start:
             {
                 try
                 {
-                    if(websocket_cts != null)
+                    if (websocket_cts != null)
                         await ws.SendAsync(bytesToSend, WebSocketMessageType.Text, true, websocket_cts.Token);
                 }
                 catch
@@ -585,12 +632,13 @@ start:
         {
             var msg = new ChatMessage[] { LiveSplitMessage.Create(message, important) };
             MessageReceived?.Invoke(this, msg);
-            RawMessageReceived?.Invoke(this, msg.First().Posted.ToString());            
+            RawMessageReceived?.Invoke(this, msg.First().Posted.ToString());
         }
 
         public void Ready() => SendChannelMessage(".ready");
         public void Quit() => SendChannelMessage(".quit");
         public void Enter() => SendChannelMessage(".enter");
+        public void Accept() => SendChannelMessage(".acceptinvite");
         public void Unready() => SendChannelMessage(".unready");
         public void Done() => Model.Split();
         public void Undone() => SendChannelMessage(".undone");

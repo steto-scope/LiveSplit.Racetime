@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Dynamic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace LiveSplit.Racetime
@@ -47,7 +48,7 @@ namespace LiveSplit.Racetime
 
         public void Warn()
         {
-            
+
         }
 
         public void Create(ITimerModel model)
@@ -82,25 +83,32 @@ namespace LiveSplit.Racetime
             }
             catch
             {
-            }            
+            }
         }
 
-        
+
         protected IEnumerable<Race> GetRacesFromServer()
         {
-            var data = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + racesEndpoint));
-            var races = data.races;
+            var request = WebRequest.Create(new Uri(BaseUri.AbsoluteUri + racesEndpoint));
+            request.Headers.Add("Authorization", "Bearer " + Authenticator.AccessToken);
 
-            foreach (var r in races)
+            using (var response = request.GetResponse())
             {
-                var fulldata = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + r.name + "/data"));
-                Race raceObj = RTModelBase.Create<Race>(fulldata);
-                yield return raceObj;
+                var data = JSON.FromResponse(response);
+
+                var races = data.races;
+
+                foreach (var r in races)
+                {
+                    var fulldata = JSON.FromUri(new Uri(BaseUri.AbsoluteUri + r.name + "/data"));
+                    Race raceObj = RTModelBase.Create<Race>(fulldata);
+                    yield return raceObj;
+                }
+                yield break;
             }
-            yield break;
         }
 
-        
+
         public override IEnumerable<IRaceInfo> GetRaces()
         {
             return Races;

@@ -121,6 +121,12 @@
   <data name="con_green" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\con_green.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\delete.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="purge" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\purge.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="con_red" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\con_red.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -129,7 +135,7 @@
     <comment>Webpage to be opened when clicking on New Race. Relative to race server</comment>
   </data>
   <data name="DOMAIN" xml:space="preserve">
-    <value>racetime.gg</value>
+    <value>localhost:8000</value>
     <comment>Domain or IP of the Race-Server</comment>
   </data>
   <data name="ENDPOINT_RACES" xml:space="preserve">
@@ -156,10 +162,10 @@
     <comment>Plain or S256</comment>
   </data>
   <data name="OAUTH_CLIENTID" xml:space="preserve">
-    <value>dKgJFc2jZjgMtUT4Ik9kyJSCZkVqRK1poCcvpKox</value>
+    <value>I6XUCPqRSwPVg7JoD7PeWgzD9GnSIOZezCxmw1r0</value>
   </data>
   <data name="OAUTH_CLIENTSECRET" xml:space="preserve">
-    <value>Rl6gGXy9zPw5xkSa0gSdE69lnlqbTwuZDAFNSDTgY5QKbQ9AqsqDYlotNGMBboDGkZFbJm9fSIpfI3sCGc3UiiZ2sEpk8KpxYf4kh0G7TjmYmgn0AXyNJNzkgIorHAcB</value>
+    <value>uSjznsTneVo8M6VxTmFbNaJ0rDdcfetvLgrppeTE3Yrl9rZ59WNg4v0txRD28Ex4kqNzjkTkOehKud4mdabJ9oYvIpmP5MxQaTV5BaHqYbGFqBGSfINgcnJ6xPfUr2PM</value>
   </data>
   <data name="OAUTH_ENDPOINT_AUTHORIZATION" xml:space="preserve">
     <value>o/authorize</value>
@@ -189,23 +195,14 @@
     <value>read chat_message race_action</value>
   </data>
   <data name="OAUTH_SERVER" xml:space="preserve">
-    <value>https://racetime.gg/</value>
-  </data>
-  <data name="PLUGIN_VERSION" xml:space="preserve">
-    <value>1.1</value>
+    <value>http://localhost:8000/</value>
   </data>
   <data name="PROTOCOL_REST" xml:space="preserve">
-    <value>https</value>
+    <value>http</value>
     <comment>http or https</comment>
   </data>
   <data name="PROTOCOL_WEBSOCKET" xml:space="preserve">
-    <value>wss</value>
+    <value>ws</value>
     <comment>ws or wss</comment>
-  </data>
-  <data name="UPDATE_DATA" xml:space="preserve">
-    <value>https://github.com/steto-scope/LiveSplit.Racetime/releases/download/</value>
-  </data>
-  <data name="UPDATE_DEFINITION" xml:space="preserve">
-    <value>https://raw.githubusercontent.com/steto-scope/LiveSplit.Racetime/stable/update.racetime.xml</value>
   </data>
 </root>

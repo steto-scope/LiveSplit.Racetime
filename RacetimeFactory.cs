@@ -25,15 +25,13 @@ namespace LiveSplit.Racetime
         {
             return new RacetimeSettings();
         }
-        
+
         public string UpdateName => "Racetime Integration";
 
-        public string XMLURL => Properties.Resources.UPDATE_DEFINITION;
+        public string XMLURL => "http://livesplit.org/update/Components/update.LiveSplit.Racetime.xml";
 
-        public string UpdateURL => Properties.Resources.UPDATE_DATA;
+        public string UpdateURL => "http://livesplit.org/update/";
 
-        public Version Version => Version.Parse(Properties.Resources.PLUGIN_VERSION);
-
-        
+        public Version Version => Version.Parse("1.8.15");
     }
 }
