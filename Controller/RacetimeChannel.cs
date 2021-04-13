@@ -339,7 +339,7 @@ namespace LiveSplit.Racetime.Controller
             }
         }
 
-
+        public int current_split = 0;
 
         private void UpdateRaceData(RaceMessage msg)
         {
@@ -377,7 +377,10 @@ namespace LiveSplit.Racetime.Controller
                     else if (nr == RaceState.Started && nu == UserStatus.Racing)
                     {
                         if (m.CurrentState.CurrentPhase == TimerPhase.Ended)
+                        {
                             m.UndoSplit();
+                            m.CurrentState.CurrentSplitIndex = current_split;
+                        }
                         else if (m.CurrentState.CurrentPhase == TimerPhase.Paused)
                             m.Pause();
                         else if (m.CurrentState.CurrentPhase == TimerPhase.NotRunning)
@@ -402,6 +405,13 @@ namespace LiveSplit.Racetime.Controller
                         }
                         m.CurrentState.Run.Offset = Race.StartDelay.Negate();
                         m.CurrentState.AdjustedStartTime = TimeStamp.Now - m.CurrentState.Run.Offset;
+                    }
+                    else if (nr == RaceState.Started && (nu == UserStatus.Finished && u == UserStatus.Racing))
+                    {
+                        current_split = m.CurrentState.CurrentSplitIndex;
+                        for (int i = 0; i < 300; i++)
+                            m.SkipSplit();
+                        m.Split();
                     }
                 }
             }
@@ -439,7 +449,7 @@ namespace LiveSplit.Racetime.Controller
                         yield return RTModelBase.Create<SystemMessage>(m.message);
                     else
                     {
-                        bool isBot = false;
+                        bool isBot;
                         try
                         {
                             isBot = m.message.is_bot;

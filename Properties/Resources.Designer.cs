@@ -61,41 +61,11 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap con_green {
-            get {
-                object obj = ResourceManager.GetObject("con_green", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap con_red {
-            get {
-                object obj = ResourceManager.GetObject("con_red", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to /.
         /// </summary>
         internal static string CREATE_RACE_ADDRESS {
             get {
                 return ResourceManager.GetString("CREATE_RACE_ADDRESS", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap delete {
-            get {
-                object obj = ResourceManager.GetObject("delete", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -114,56 +84,6 @@ namespace LiveSplit.Racetime.Properties {
         internal static string ENDPOINT_RACES {
             get {
                 return ResourceManager.GetString("ENDPOINT_RACES", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap f {
-            get {
-                object obj = ResourceManager.GetObject("f", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap flag {
-            get {
-                object obj = ResourceManager.GetObject("flag", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap live {
-            get {
-                object obj = ResourceManager.GetObject("live", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap live_and_ready {
-            get {
-                object obj = ResourceManager.GetObject("live_and_ready", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap not_live {
-            get {
-                object obj = ResourceManager.GetObject("not_live", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -299,16 +219,6 @@ namespace LiveSplit.Racetime.Properties {
         internal static string PROTOCOL_WEBSOCKET {
             get {
                 return ResourceManager.GetString("PROTOCOL_WEBSOCKET", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap purge {
-            get {
-                object obj = ResourceManager.GetObject("purge", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

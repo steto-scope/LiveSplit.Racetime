@@ -34,11 +34,11 @@ namespace LiveSplit.Racetime
         {
             control.Settings = this;
             return control;
-        }               
+        }
 
         public override void FromXml(XmlElement element, Version version)
         {
-            base.FromXml(element, version);            
+            base.FromXml(element, version);
             LoadChatHistory = SettingsHelper.ParseBool(element["LoadChatHistory"], true);
             HideResults = SettingsHelper.ParseBool(element["HideResults"], true);
         }

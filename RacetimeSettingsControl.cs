@@ -27,14 +27,8 @@ namespace LiveSplit.Racetime
             InitializeComponent();
         }
 
-        private void loadHistoryCheckbox_CheckedChanged(object sender, EventArgs e)
-        {
-            Settings.LoadChatHistory = loadHistoryCheckbox.Checked;
-        }
-
         private void RacetimeSettingsControl_VisibleChanged(object sender, EventArgs e)
         {
-            loadHistoryCheckbox.Checked = Settings.LoadChatHistory;
         }
     }
 }
