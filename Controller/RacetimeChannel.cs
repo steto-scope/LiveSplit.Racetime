@@ -47,7 +47,7 @@ namespace LiveSplit.Racetime.Controller
         public string Username { get; set; }
         public bool Invited = false;
         public TimeSpan Offset { get; set; }
-
+        public string Token { get; set; }
         CancellationTokenSource websocket_cts;
         CancellationTokenSource reconnect_cts;
 
@@ -230,7 +230,7 @@ namespace LiveSplit.Racetime.Controller
 
                 //opening the socket
                 ws.Options.SetRequestHeader("Authorization", $"Bearer {Authenticator.AccessToken}");
-
+                Token = Authenticator.AccessToken;
                 try
                 {
                     await ws.ConnectAsync(new Uri(FullSocketRoot + "ws/o/race/" + id), websocket_cts.Token);
