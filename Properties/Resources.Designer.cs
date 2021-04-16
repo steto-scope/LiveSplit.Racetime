@@ -70,7 +70,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to localhost:8000.
+        ///   Looks up a localized string similar to racetime.gg.
         /// </summary>
         internal static string DOMAIN {
             get {
@@ -97,7 +97,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to I6XUCPqRSwPVg7JoD7PeWgzD9GnSIOZezCxmw1r0.
+        ///   Looks up a localized string similar to dKgJFc2jZjgMtUT4Ik9kyJSCZkVqRK1poCcvpKox.
         /// </summary>
         internal static string OAUTH_CLIENTID {
             get {
@@ -106,7 +106,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to uSjznsTneVo8M6VxTmFbNaJ0rDdcfetvLgrppeTE3Yrl9rZ59WNg4v0txRD28Ex4kqNzjkTkOehKud4mdabJ9oYvIpmP5MxQaTV5BaHqYbGFqBGSfINgcnJ6xPfUr2PM.
+        ///   Looks up a localized string similar to Rl6gGXy9zPw5xkSa0gSdE69lnlqbTwuZDAFNSDTgY5QKbQ9AqsqDYlotNGMBboDGkZFbJm9fSIpfI3sCGc3UiiZ2sEpk8KpxYf4kh0G7TjmYmgn0AXyNJNzkgIorHAcB.
         /// </summary>
         internal static string OAUTH_CLIENTSECRET {
             get {
@@ -187,7 +187,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to read chat_message race_action chat_delete chat_purge.
+        ///   Looks up a localized string similar to read chat_message race_action.
         /// </summary>
         internal static string OAUTH_SCOPES {
             get {
@@ -196,7 +196,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to http://localhost:8000/.
+        ///   Looks up a localized string similar to https://racetime.gg.
         /// </summary>
         internal static string OAUTH_SERVER {
             get {
@@ -205,7 +205,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to http.
+        ///   Looks up a localized string similar to https.
         /// </summary>
         internal static string PROTOCOL_REST {
             get {
@@ -214,7 +214,7 @@ namespace LiveSplit.Racetime.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ws.
+        ///   Looks up a localized string similar to wss.
         /// </summary>
         internal static string PROTOCOL_WEBSOCKET {
             get {

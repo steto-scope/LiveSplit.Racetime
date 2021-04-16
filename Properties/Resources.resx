@@ -117,13 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="CREATE_RACE_ADDRESS" xml:space="preserve">
     <value>/</value>
     <comment>Webpage to be opened when clicking on New Race. Relative to race server</comment>
   </data>
   <data name="DOMAIN" xml:space="preserve">
-    <value>localhost:8000</value>
+    <value>racetime.gg</value>
     <comment>Domain or IP of the Race-Server</comment>
   </data>
   <data name="ENDPOINT_RACES" xml:space="preserve">
@@ -135,10 +134,10 @@
     <comment>Plain or S256</comment>
   </data>
   <data name="OAUTH_CLIENTID" xml:space="preserve">
-    <value>I6XUCPqRSwPVg7JoD7PeWgzD9GnSIOZezCxmw1r0</value>
+    <value>dKgJFc2jZjgMtUT4Ik9kyJSCZkVqRK1poCcvpKox</value>
   </data>
   <data name="OAUTH_CLIENTSECRET" xml:space="preserve">
-    <value>uSjznsTneVo8M6VxTmFbNaJ0rDdcfetvLgrppeTE3Yrl9rZ59WNg4v0txRD28Ex4kqNzjkTkOehKud4mdabJ9oYvIpmP5MxQaTV5BaHqYbGFqBGSfINgcnJ6xPfUr2PM</value>
+    <value>Rl6gGXy9zPw5xkSa0gSdE69lnlqbTwuZDAFNSDTgY5QKbQ9AqsqDYlotNGMBboDGkZFbJm9fSIpfI3sCGc3UiiZ2sEpk8KpxYf4kh0G7TjmYmgn0AXyNJNzkgIorHAcB</value>
   </data>
   <data name="OAUTH_ENDPOINT_AUTHORIZATION" xml:space="preserve">
     <value>o/authorize</value>
@@ -165,17 +164,17 @@
     <value>4888</value>
   </data>
   <data name="OAUTH_SCOPES" xml:space="preserve">
-    <value>read chat_message race_action chat_delete chat_purge</value>
+    <value>read chat_message race_action</value>
   </data>
   <data name="OAUTH_SERVER" xml:space="preserve">
-    <value>http://localhost:8000/</value>
+    <value>https://racetime.gg</value>
   </data>
   <data name="PROTOCOL_REST" xml:space="preserve">
-    <value>http</value>
+    <value>https</value>
     <comment>http or https</comment>
   </data>
   <data name="PROTOCOL_WEBSOCKET" xml:space="preserve">
-    <value>ws</value>
+    <value>wss</value>
     <comment>ws or wss</comment>
   </data>
 </root>
